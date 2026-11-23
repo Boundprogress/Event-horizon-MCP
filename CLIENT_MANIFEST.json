@@ -62,12 +62,12 @@
       "sha256": "566f17ab6e1c3d295d868a9b14270e5efd63a6374970c255d2c9f346275a5a4a"
     },
     "docs/BROWSER_USE_COMPARISON.en.md": {
-      "bytes": 4609,
-      "sha256": "6ce8187f55e1d306c099f29dd6cbd89313cd807abd3f26b4833a6d3a5b2a834a"
+      "bytes": 4645,
+      "sha256": "a135f46bf58c41c76dbaedba4bf4cbd201424b52d65e442a9a0556387adc1282"
     },
     "docs/BROWSER_USE_COMPARISON.md": {
-      "bytes": 3867,
-      "sha256": "fd13f6108ea908408295bad1fe671a62e1f0259edbdaa833e80d60074b33c0c0"
+      "bytes": 3910,
+      "sha256": "c2c54a9030a7b389ad420921a6bf23d75f7bd2de9d97a3eaa7b6577e323a1195"
     },
     "docs/CAPABILITIES.en.md": {
       "bytes": 6571,
@@ -86,12 +86,12 @@
       "sha256": "607d03d9a41f9c2abbc41c6fece0e473622447ba786686fb7f57c1ed40a954a4"
     },
     "docs/FAQ.en.md": {
-      "bytes": 11024,
-      "sha256": "30044403f2c39f14510e9ffff53408d572bb7f74c916a0006c00a64a1070cfb2"
+      "bytes": 11295,
+      "sha256": "df6116486b8b1e0b8e4da2d86456b78b23086ab088556764ef7660763ff63843"
     },
     "docs/FAQ.md": {
-      "bytes": 8965,
-      "sha256": "2fb7150c91ed1ad937be91d81340d3c09cdc8413883a81bc43c7ded5ca85014e"
+      "bytes": 9215,
+      "sha256": "289cdeca7d65df5feb8e559a28a688805d31c902e30ddd4385e32f01791eecfc"
     },
     "docs/README.en.md": {
       "bytes": 685,

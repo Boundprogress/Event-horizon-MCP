@@ -68,11 +68,11 @@ The browser's debugging port is still assigned dynamically by the system. This d
 
 Upgrades from 0.25.4 or earlier do not automatically merge older temporary browser directories. Sign in to websites again the first time; the account's dedicated profile is retained afterward. Keep using your existing data directory when updating the client. Changing the data directory creates a new browser profile. Signing out of EH does not delete saved website login state.
 
-## How do I get the free trial allowance?
+## How do I get access? Is it free?
 
-EH is currently in public testing. New accounts automatically receive **1,000 free frames** when registration succeeds, without an email request or activation code. This is a one-time total allowance with no expiry. It does not reset monthly, and usage stops when the balance is exhausted.
+EH is currently **100% free — register & use** for personal, non-commercial use, research, and evaluation, with no paywall, waitlist, credit card, or activation code required. Register with a regular email address and complete the 6-digit email verification code to start connecting your local Chrome immediately. To keep shared infrastructure stable for everyone, free accounts run under single-concurrency fair-use guardrails (one active session and one in-flight command at a time), and commercial production or continuous profit-seeking workloads are prohibited.
 
-Check your actual remaining balance and access status on the client's account page. If you have a permanent-frame activation code, redeem it there to add frames. For unexpected balance or access issues, contact [pluto@ehbrowser.com](mailto:pluto@ehbrowser.com). The test version may produce errors or interruptions; important actions and outputs still need manual checking. Your own model, host, or other third-party services may incur separate charges. Read the service agreement displayed in the client first.
+Check your current access status on the client's Account page. For unexpected access issues, mistaken territorial blocks, or appeals, contact [pluto@ehbrowser.com](mailto:pluto@ehbrowser.com). The service may still produce errors or interruptions; important actions and outputs always need manual verification. Your own model, host, or other third-party services may incur separate charges. Please read the Terms of Service displayed in the client (also published at `https://ehbrowser.com/terms`) before use.
 
 ## How do I confirm that the client has exited?
 
