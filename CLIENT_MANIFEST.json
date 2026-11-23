@@ -106,8 +106,8 @@
       "sha256": "c2bc0bbdbdac13860e72933b921e4e923c91e6273fb53136be3001ad32ae9f1e"
     },
     "eh_sdk.py": {
-      "bytes": 11285,
-      "sha256": "381fc21aeaed3f96533678d515abc499d7c3e19dec48a46f7886e756ea961542"
+      "bytes": 11753,
+      "sha256": "d0133c7e74b5365ddec4149012b7d50c8933ebf0b656ea4b8452506624d85b72"
     },
     "example_agent.py": {
       "bytes": 148502,
@@ -150,8 +150,8 @@
       "sha256": "d2b7e9224b118be3c89bebca36f3a7ce78569ff4e460e0805f5c1befd24a521c"
     },
     "tests/test_acp_sdk_and_cli_tool.py": {
-      "bytes": 9211,
-      "sha256": "b3845a3212f3fb6f9d5a717646424b3ee8f5cb7d9c42e6ce2ddf2ea7149376b0"
+      "bytes": 11047,
+      "sha256": "7c0c5601a80476204c4206fd2e81b1f2b9faf01e39b093e3eef43539699ee886"
     },
     "tests/test_appeals_ui.js": {
       "bytes": 9604,

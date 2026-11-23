@@ -55,29 +55,41 @@ def _make_console_dir(base: Path) -> Path:
     return cdir
 
 
+SID = "0123456789abcdef0123456789abcdef"
+
+
 class FakeBridge:
     def __init__(self):
-        self.tools = {
-            "eh_status": {"name": "eh_status", "inputSchema": {"type": "object"}},
-            "eh_sessions": {"name": "eh_sessions", "inputSchema": {"type": "object"}},
-            "eh_create_session": {"name": "eh_create_session", "inputSchema": {"type": "object"}},
-            "eh_perceive": {"name": "eh_perceive", "inputSchema": {"type": "object"}},
-            "eh_act": {"name": "eh_act", "inputSchema": {"type": "object"}},
-            "eh_terminal": {"name": "eh_terminal", "inputSchema": {"type": "object"}},
-            "eh_close_session": {"name": "eh_close_session", "inputSchema": {"type": "object"}},
-        }
+        self.tools = {t["name"]: t for t in example_agent.tool_definitions()}
         self.calls = []
 
     def call(self, name, arguments):
+        example_agent._validate(arguments, self.tools[name]["inputSchema"])
         self.calls.append((name, dict(arguments)))
         if name == "eh_status":
             return {"content": [{"type": "text", "text": json.dumps({"ok": True, "account": "a_testacct01"})}], "isError": False}
+        if name == "eh_capabilities":
+            return {"content": [{"type": "text", "text": json.dumps({"available": True})}], "isError": False}
+        if name == "eh_sessions":
+            return {"content": [{"type": "text", "text": json.dumps({"sessions": []})}], "isError": False}
+        if name == "eh_session":
+            return {"content": [{"type": "text", "text": json.dumps({"session_id": SID, "lifecycle": "active"})}], "isError": False}
         if name == "eh_create_session":
-            return {"content": [{"type": "text", "text": json.dumps({"session_id": "s_123", "frame_id": "f_0"})}], "isError": False}
+            return {"content": [{"type": "text", "text": json.dumps({"session_id": SID, "frame_id": "f_0"})}], "isError": False}
         if name == "eh_perceive":
             return {"content": [{"type": "text", "text": json.dumps({"frame_id": "f_1", "core_result": {"v2_prompt": "[Page] Demo"}})}], "isError": False}
         if name == "eh_act":
             return {"content": [{"type": "text", "text": json.dumps({"frame_id": "f_2", "status": "completed"})}], "isError": False}
+        if name == "eh_act_batch":
+            return {"content": [{"type": "text", "text": json.dumps({"frame_id": "f_3", "status": "completed"})}], "isError": False}
+        if name == "eh_evidence":
+            return {"content": [{"type": "text", "text": json.dumps({"items": []})}], "isError": False}
+        if name == "eh_tabs":
+            return {"content": [{"type": "text", "text": json.dumps({"tabs": []})}], "isError": False}
+        if name == "eh_result":
+            return {"content": [{"type": "text", "text": json.dumps({"commit_state": "committed"})}], "isError": False}
+        if name == "eh_request":
+            return {"content": [{"type": "text", "text": json.dumps({"status": "completed", "frame_id": "f_3"})}], "isError": False}
         if name == "eh_terminal":
             return {"content": [{"type": "text", "text": json.dumps({"commit_state": "committed"})}], "isError": False}
         if name == "eh_close_session":
@@ -167,21 +179,44 @@ class ACPSDKAndCLIToolTests(unittest.TestCase):
             bridge=fake,
         )
         self.assertTrue(sdk.status()["ok"])
+        self.assertTrue(sdk.capabilities()["available"])
+        self.assertEqual(sdk.sessions()["sessions"], [])
+        self.assertEqual(sdk.session(SID)["session_id"], SID)
         acp_entry = sdk.acp_mcp_server()
         self.assertEqual(acp_entry["name"], "event-horizon")
         self.assertEqual(acp_entry["env"], [])
 
         sess = sdk.open_session("Read Python version", "https://www.python.org/")
-        self.assertEqual(sess.session_id, "s_123")
+        create_call = next(args for name, args in fake.calls if name == "eh_create_session")
+        self.assertEqual(create_call["objective"], "Read Python version")
+        self.assertNotIn("task", create_call)
+        self.assertEqual(sess.session_id, SID)
         self.assertEqual(sess.frame_id, "f_0")
-        obs = sess.perceive()
+        obs = sess.perceive(arguments={"query": "version"}, wait_seconds=30)
         self.assertEqual(obs["frame_id"], "f_1")
         self.assertEqual(sess.frame_id, "f_1")
-        act = sess.act("click", target="N1", decision={"subgoal": "open", "evidence": ["N1"], "basis": ["visible_text"]})
+        decision = {
+            "subgoal": "open",
+            "evidence": ["N1"],
+            "basis": ["visible_text"],
+            "expected": "target opens",
+            "confidence": "high",
+        }
+        act = sess.act("click", target="N1", decision=decision)
         self.assertEqual(act["frame_id"], "f_2")
         self.assertEqual(sess.frame_id, "f_2")
+        batch = sess.act_batch(
+            [{"kind": "click", "target": "N1"}],
+            decision=decision,
+        )
+        self.assertEqual(batch["frame_id"], "f_3")
+        self.assertEqual(sess.evidence(limit=5)["items"], [])
+        self.assertEqual(sess.tabs(limit=5)["tabs"], [])
+        self.assertEqual(sess.request_status("req-1")["status"], "completed")
+        self.assertEqual(sess.info()["lifecycle"], "active")
         term = sess.terminal("success", "Python 3.12", bindings={"version": "N1"})
         self.assertEqual(term["commit_state"], "committed")
+        self.assertEqual(sess.result()["commit_state"], "committed")
         self.assertTrue(sess.close()["closed"])
 
         with self.assertRaises(eh_sdk.EHSDKError):

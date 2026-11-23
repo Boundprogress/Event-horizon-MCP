@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 from pathlib import Path
 import uuid
 
@@ -223,9 +224,9 @@ class EventHorizonClient:
         bridge=None,
     ):
         self._agent = _load_sibling("example_agent")
-        self.console_directory = str(Path(console_directory).expanduser().absolute()) if console_directory else None
-        self.config_path = str(Path(config_path).expanduser().absolute()) if config_path else None
-        self.directory = str(Path(directory).expanduser().absolute()) if directory else None
+        self.console_directory = str(Path(os.path.expandvars(str(console_directory))).expanduser().absolute()) if console_directory else None
+        self.config_path = str(Path(os.path.expandvars(str(config_path))).expanduser().absolute()) if config_path else None
+        self.directory = str(Path(os.path.expandvars(str(directory))).expanduser().absolute()) if directory else None
         self.expected_account = expected_account
         self.expected_endpoint = expected_endpoint
         self._bridge = bridge or self._agent.AgentBridge(
@@ -290,11 +291,20 @@ class EventHorizonClient:
             args["after"] = after
         return self.call("eh_sessions", args)
 
+    def session(self, session_id=None, *, create_request_id=None):
+        """Look up a session by session_id or create_request_id."""
+        args = {}
+        if session_id is not None:
+            args["session_id"] = session_id
+        if create_request_id is not None:
+            args["create_request_id"] = create_request_id
+        return self.call("eh_session", args)
+
     def open_session(self, objective, start_url, *, request_id=None):
         rid = request_id or f"create-{uuid.uuid4().hex[:12]}"
         created = self.call(
             "eh_create_session",
-            {"task": objective, "start_url": start_url, "request_id": rid},
+            {"objective": objective, "start_url": start_url, "request_id": rid},
         )
         sid = created.get("session_id") or (created.get("session") or {}).get("id")
         if not isinstance(sid, str) or not sid:
