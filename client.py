@@ -923,13 +923,25 @@ def parser():
     mcp.add_argument("--directory", help="private submission journal directory for --config mode")
     mcp.add_argument("--expected-account", help="account binding from an EH-generated connection package")
     mcp.add_argument("--expected-endpoint", help="endpoint paired with --expected-account")
-    export = sub.add_parser("mcp-config", parents=[common], help="Print credential-free MCP configuration")
+    export = sub.add_parser("mcp-config", parents=[common], help="Print credential-free MCP or ACP configuration")
     export.add_argument("--console-directory", required=True)
+    export.add_argument("--host", choices=("generic", "codex", "acp"), default="generic")
+    export.add_argument("--expected-account", help="optional account binding")
+    export.add_argument("--expected-endpoint", help="optional endpoint binding paired with --expected-account")
     export.add_argument("--updater")
     export.add_argument("--install-root")
+    tool = sub.add_parser("tool", parents=[common], help="Invoke one EH tool directly via credential-free bound console directory")
+    tool.add_argument("--console-directory")
+    tool.add_argument("--directory", help="private submission journal directory for --config mode")
+    tool.add_argument("--expected-account", help="account binding from an EH-generated connection package")
+    tool.add_argument("--expected-endpoint", help="endpoint paired with --expected-account")
+    tool_sel = tool.add_mutually_exclusive_group(required=True)
+    tool_sel.add_argument("--name", help="EH tool name, e.g. eh_status, eh_sessions, eh_perceive, eh_act")
+    tool_sel.add_argument("--list", action="store_true", help="list all available EH tools and JSON schemas")
+    tool.add_argument("--args", default="{}", help="JSON object of tool arguments")
     connect = sub.add_parser("agent-connect", parents=[common], help="Create private connection instructions and print one line for your local Agent")
     connect.add_argument("--console-directory", default=str(Path(os.environ['LOCALAPPDATA'])/'EH Client Data') if sys.platform=='win32' else str(Path.home()/'.local/share/eh-subscription-console'))
-    connect.add_argument("--host", choices=("generic", "codex"), default="generic")
+    connect.add_argument("--host", choices=("generic", "codex", "acp"), default="generic")
     connect.add_argument("--updater")
     connect.add_argument("--install-root")
     audit = sub.add_parser("audit", parents=[common])
@@ -939,7 +951,7 @@ def parser():
 
 def main(argv=None):
     args = parser().parse_args(argv)
-    if args.operation in {"mcp", "mcp-config", "agent-connect"}:
+    if args.operation in {"mcp", "mcp-config", "agent-connect", "tool"}:
         import importlib.util
         spec = importlib.util.spec_from_file_location("eh_mcp_tools", Path(__file__).with_name("example_agent.py"))
         bridge = importlib.util.module_from_spec(spec)
@@ -952,9 +964,32 @@ def main(argv=None):
                 print(json.dumps(value, ensure_ascii=False) if getattr(args, "json_only", False) else value["instruction"])
                 return 0
             if args.operation == "mcp-config":
-                value = bridge.mcp_config(args.console_directory, updater=args.updater, install_root=args.install_root)
-                print(json.dumps(value, ensure_ascii=False, indent=2))
+                exported = bridge.mcp_export(
+                    args.console_directory, host=args.host, updater=args.updater, install_root=args.install_root,
+                    expected_account=args.expected_account, expected_endpoint=args.expected_endpoint,
+                )
+                print(exported["text"], end="")
                 return 0
+            if args.operation == "tool":
+                if getattr(args, "out", None):
+                    raise bridge.AgentError("tool_stdout_is_json_only")
+                try:
+                    tool_args = json.loads(args.args) if args.args else {}
+                except ValueError:
+                    print(json.dumps({"error": "invalid_tool_arguments_json", "automatic_retry": False}))
+                    return 1
+                code, payload = bridge.invoke_tool(
+                    name=args.name,
+                    list_tools=args.list,
+                    arguments=tool_args,
+                    config_path=getattr(args, "config", None),
+                    console_directory=args.console_directory,
+                    directory=args.directory,
+                    expected_account=args.expected_account,
+                    expected_endpoint=args.expected_endpoint,
+                )
+                print(json.dumps(payload, ensure_ascii=False))
+                return code
             if getattr(args, "out", None):
                 raise bridge.AgentError("mcp_stdout_is_protocol_only")
             return bridge.serve_mcp(config_path=getattr(args, "config", None),
@@ -965,6 +1000,8 @@ def main(argv=None):
         except Exception:
             print("EH connection instructions were not created; check the signed-in client and private directory."
                   if args.operation == "agent-connect" else
+                  "EH tool invocation failed; check the private client configuration."
+                  if args.operation == "tool" else
                   "EH MCP startup failed; check the private client configuration.", file=sys.stderr)
             return 2
     config_path, token = getattr(args, "config", None), ""

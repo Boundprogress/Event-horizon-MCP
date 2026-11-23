@@ -9,7 +9,7 @@ description: 通过 EH 订阅客户端的 MCP 工具检查接入、读取网页�
 
 ## 接入与会话
 
-- 先发现宿主实际提供的 EH 工具，名称可能带命名空间前缀；以当前工具 schema 为参数依据。若工具不可见，指引用户在 EH 客户端生成接入配置、加载到宿主并重载连接。Skill 本身不会注册 MCP、登录或连接浏览器。客户端更新后可用 `eh_status.client.tools` 对比宿主实际工具名，用 `client.act_kinds` 对比宿主 `eh_act.kind` 的实际枚举。目录不一致可能来自旧缓存或宿主裁剪；缺 `open_tab`、`close_tab`、`eh_tabs`、`eh_act_batch` 等时，请用户断开并重新连接该 MCP 后再次核验，仍以宿主实际 schema 为准，不调用未提供的能力。账号、端点或凭据绑定变化时另行核验接入范围；单纯重启客户端不表示账号绑定失配。
+- 先发现宿主实际提供的 EH 工具，名称可能带命名空间前缀；以当前工具 schema 为参数依据。若工具不可见，按同目录 `CONNECT.md` 优先配置原生 stdio MCP（`mcp-config.json`）或 ACP `mcpServers`（`acp-mcp-servers.json`）；若当前桌面宿主明确不支持 MCP/ACP 配置但具备本机命令执行能力，可使用 `CONNECT.md` 提供的已绑定账号免明文 Key 命令行入口（`client.py tool --name <tool> --args '<json>'`）或同目录 `eh_sdk.py`，它们复用完全相同的 17 个工具、schema 与安全护栏。Skill 本身不会注册 MCP、登录或连接浏览器。客户端更新后可用 `eh_status.client.tools` 对比宿主实际工具名，用 `client.act_kinds` 对比宿主 `eh_act.kind` 的实际枚举。目录不一致可能来自旧缓存或宿主裁剪；缺 `open_tab`、`close_tab`、`eh_tabs`、`eh_act_batch` 等时，请用户断开并重新连接该 MCP 后再次核验，仍以宿主实际 schema 为准，不调用未提供的能力。账号、端点或凭据绑定变化时另行核验接入范围；单纯重启客户端不表示账号绑定失配。
 - 复用客户端生成的固定启动命令：GitHub源码模式使用本机Python与检出目录，历史安装器模式继续走验签入口；不手动替换路径或绕过安装版验签。Skill 不保存 Key、设备 token、私有文件内容、个人绝对路径或云端运营凭据，不要求用户把凭据粘贴进聊天。
 - 调用 `eh_status` 和 `eh_sessions`。健康检查成功只证明 API 可达，不证明浏览器已连接、额度充足或任务成功。读取实际 `subscription_quota` 的 `metering`、`unit`、`limit`、`used`、`reserved`、`remaining`、`enabled`、`expires_at`；`available:false` 或旧服务未返回时，额度未知，不按套餐名称猜成3000帧，也不当作零余额。只要求“检查接入”时报告实际状态和缺口，到此结束，不创建任务。
 - 开始任务还须确认 `connector_readiness.available:true`、`ready:true`。`ready:false` 时浏览器未就绪；缺字段、`not_configured` 或非法数据表示未知，不能用创建会话来试连接。连接离线或代次变化后停止新任务；只在必要时按原请求编号只读查回，把明确重连交给用户，不自动重连、不重放状态不确定的动作。

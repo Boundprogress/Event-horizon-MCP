@@ -80,7 +80,7 @@ def parser():
     start.add_argument("--headless", action="store_true", help="run the owned task Chrome headless")
     connect = commands.add_parser("agent-connect", help="prepare instructions to paste into your local Agent", allow_abbrev=False)
     connect.add_argument("--directory", "--console-directory", dest="directory", help="existing private console directory")
-    connect.add_argument("--host", choices=("generic", "codex"), default="generic")
+    connect.add_argument("--host", choices=("generic", "codex", "acp"), default="generic")
     connect.add_argument("--json-only", action="store_true", help="print safe connection metadata instead of one sentence")
     return result
 

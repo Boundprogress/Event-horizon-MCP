@@ -230,7 +230,26 @@ py -3 -I -S -B eh.py start
 1. The local console opens automatically in your browser (defaults to **English** on non-Chinese locales; switch anytime in the sidebar).
 2. **Register with your email** — access is **100% free, register & use immediately** (no waitlist, no activation code, no credit card).
 3. Click **Prepare Local Setup** → **Connect Browser** to launch your isolated local Chrome.
-4. Click **Copy One-Line MCP Setup** and paste it into **Claude Code / Cursor / Codex**. Your agent configures the MCP connection, verifies health, and is ready to drive real pages.
+4. Click **Copy One-Line MCP Setup** and paste it into **Claude Code / Cursor / Codex / OpenCode** — or any ACP / shell-capable desktop agent. The generated connection package automatically adapts across three tiers (without ever exposing your API key):
+   - **Tier 1 (Native stdio MCP)**: `mcp-config.json` / Codex TOML (`eh_*` tools).
+   - **Tier 2 (ACP `session/new` & Python SDK)**: `acp-mcp-servers.json` (standard Agent Client Protocol `mcpServers` array, or `python3 -I -S -B client.py mcp-config --console-directory <dir> --host acp`) and zero-dependency [`eh_sdk.py`](eh_sdk.py) (`EventHorizonClient.from_console()` / `.acp_mcp_servers()`).
+   - **Tier 3 (Non-MCP Desktop Hosts with Shell Access)**: Bound credential-free CLI fallback (`python3 -I -S -B client.py tool --console-directory <dir> --name eh_status --args '{}'`) exposing all 17 tools and schemas identically.
+
+### 3. Optional: Python SDK & ACP Integration (Zero `pip install`)
+
+```python
+from eh_sdk import EventHorizonClient
+
+eh = EventHorizonClient.from_console()
+
+# Pass directly into an ACP (Agent Client Protocol) session/new payload:
+acp_mcp_servers = eh.acp_mcp_servers()
+
+# Or drive your connected local Chrome directly from Python:
+session = eh.open_session("Check latest release", "https://www.python.org/")
+obs = session.perceive()
+session.close()
+```
 
 > Full client setup & troubleshooting: [Client Docs](docs/README.en.md) · [Capabilities](docs/CAPABILITIES.en.md) · [FAQ](docs/FAQ.en.md) · [Comparison with Browser Use & Playwright MCP](docs/BROWSER_USE_COMPARISON.en.md)
 

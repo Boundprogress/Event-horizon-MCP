@@ -1016,7 +1016,7 @@ class Console:
             if self.cloud.get('appeals',{}).get('available') is not True:raise PanelError('appeals_service_update_required')
         if op=='support_export': fields(body,set());return self.support_export()
         if op=='agent_connect':
-            if set(body) not in (set(), {'host'}) or body.get('host', 'generic') not in ('codex', 'generic'):
+            if set(body) not in (set(), {'host'}) or body.get('host', 'generic') not in ('codex', 'generic', 'acp'):
                 raise PanelError('invalid_fields', 400)
             self.config('login');self.config('key')
             agent = sibling('example_agent')
@@ -1028,7 +1028,7 @@ class Console:
                 raise PanelError(code if code in AGENT_CONNECT_ERRORS else 'agent_connect_write_failed') from None
             return dict(result, status='agent_link_ready', contains_credentials=False)
         if op=='agent_export':
-            if set(body) not in (set(), {'host'}) or body.get('host', 'generic') not in ('codex', 'generic'):
+            if set(body) not in (set(), {'host'}) or body.get('host', 'generic') not in ('codex', 'generic', 'acp'):
                 raise PanelError('invalid_fields', 400)
             self.config('login');self.config('key')
             result=sibling('example_agent').agent_bundle(self.store.root, host=body.get('host', 'generic'),

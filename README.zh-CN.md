@@ -206,7 +206,26 @@ py -3 -I -S -B eh.py start
 1. 启动后自动打开本机控制台（支持中英切换）。
 2. **注册并验证邮箱**：完全免费，注册即用，无需等待或激活码。
 3. 点击 **准备本机使用** → **连接浏览器** 启动专属隔离 Chrome。
-4. 点击 **复制一句话接入**，发给你的 **Claude Code / Cursor / Codex** 即可开始真机任务。
+4. 点击 **复制一句话接入**，发给 **Claude Code / Cursor / Codex / OpenCode** 或任意支持 ACP / 本机命令行的桌面 Agent。生成的接入目录支持**三层自动适配**（全程不暴露明文 Key）：
+   - **通道 1（标准 stdio MCP）**：`mcp-config.json` / Codex TOML（直接挂载 17 个 `eh_*` 工具）。
+   - **通道 2（ACP `session/new` 与 Python SDK）**：同目录自带 `acp-mcp-servers.json`（标准 Agent Client Protocol 数组格式，也可通过 `client.py mcp-config --host acp` 导出）以及零依赖 Python SDK [`eh_sdk.py`](eh_sdk.py)（`EventHorizonClient.from_console()` / `.acp_mcp_servers()`）。
+   - **通道 3（无 MCP 设置页但带终端工具的桌面宿主）**：自动降级到绑定账号的免明文 Key CLI 入口（`client.py tool --console-directory <dir> --name eh_status --args '{}'`），复用完全相同的 17 个工具与安全护栏。
+
+### 可选：Python SDK 与 ACP 直连（零 `pip install`）
+
+```python
+from eh_sdk import EventHorizonClient
+
+eh = EventHorizonClient.from_console()
+
+# 直接塞进 ACP (Agent Client Protocol) 的 session/new 参数：
+acp_mcp_servers = eh.acp_mcp_servers()
+
+# 或直接从 Python 驱动已连接的本机专属 Chrome：
+session = eh.open_session("查看最新版本号", "https://www.python.org/")
+obs = session.perceive()
+session.close()
+```
 
 > 更多文档：[用户文档](docs/README.md) · [能力与边界](docs/CAPABILITIES.md) · [常见问答](docs/FAQ.md) · [与 Browser Use / Playwright MCP 对比](docs/BROWSER_USE_COMPARISON.md)
 
