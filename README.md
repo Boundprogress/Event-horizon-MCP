@@ -253,7 +253,8 @@ Event Horizon is independently built and maintained.
 
 - **Report a tough site or bug**: Open a GitHub Issue with the public URL and what broke — real-world failure cases drive our roadmap.
 - **Sponsor server costs**: If Event Horizon cuts your agent token bills or saves engineering time, voluntary sponsorships will help keep the hosted perception service free and online *(sponsorship link opening soon)*.
-- **Contact, feedback & appeals**: [pluto@ehbrowser.com](mailto:pluto@ehbrowser.com) · Website & Terms: `https://ehbrowser.com` / `https://ehbrowser.com/terms`.
+- **Contact, feedback & appeals**: [pluto@ehbrowser.com](mailto:pluto@ehbrowser.com) · Website & Terms: [`https://ehbrowser.com`](https://ehbrowser.com/)
+ / [`https://ehbrowser.com/terms`](https://ehbrowser.com/terms/).
 
 ---
 
