@@ -72,7 +72,7 @@ Upgrades from 0.25.4 or earlier do not automatically merge older temporary brows
 
 EH is currently **100% free — register & use** for personal, non-commercial use, research, and evaluation, with no paywall, waitlist, credit card, or activation code required. Register with a regular email address and complete the 6-digit email verification code to start connecting your local Chrome immediately. To keep shared infrastructure stable for everyone, free accounts run under single-concurrency fair-use guardrails (one active session and one in-flight command at a time), and commercial production or continuous profit-seeking workloads are prohibited.
 
-Check your current access status on the client's Account page. For unexpected access issues, mistaken territorial blocks, or appeals, contact [pluto@ehbrowser.com](mailto:pluto@ehbrowser.com). The service may still produce errors or interruptions; important actions and outputs always need manual verification. Your own model, host, or other third-party services may incur separate charges. Please read the Terms of Service displayed in the client (also published at `https://ehbrowser.com/terms`) before use.
+Check your current access status on the client's Account page. For unexpected access issues, mistaken territorial blocks, or appeals, contact [pluto@ehbrowser.com](mailto:pluto@ehbrowser.com). The service may still produce errors or interruptions; important actions and outputs always need manual verification. Your own model, host, or other third-party services may incur separate charges. Please read the Terms of Service displayed in the client (also published at [https://ehbrowser.com/terms](https://ehbrowser.com/terms/)) before use.
 
 ## How do I confirm that the client has exited?
 

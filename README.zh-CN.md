@@ -6,7 +6,7 @@
 
 **基于 MCP 的视口契约编译引擎 —— Token 暴降 91.9%、遮挡误点归零、0 条站点规则。**
 
-[English](README.md) · [中文](README.zh-CN.md) · [60 秒免费上手](#60-秒快速上手完全免费--注册即用) · [实测对比](#实测证据视口契约编译-vs-裸-dom--纯视觉) · [为何云端托管与免费](#为什么感知核心放在云端)
+[English](README.md) · [中文](README.zh-CN.md) · [官网](https://ehbrowser.com/) · [60 秒免费上手](#60-秒快速上手完全免费--注册即用) · [实测对比](#实测证据视口契约编译-vs-裸-dom--纯视觉) · [为何云端托管与免费](#为什么感知核心放在云端)
 
 </div>
 
@@ -238,7 +238,7 @@ session.close()
 - 普通公开 HTTP(S) 站点无需逐站白名单；私有网络与**银行、支付、医疗、凭据输入**等高敏感场景默认受限。
 - **欢迎丢给我们你最头疼的网页**：如果某个 Shadow DOM 站点、复杂表格或业务后台把你的 Browser Agent 搞崩了，欢迎直接提 GitHub Issue。
 - **赞助支持**：本项目由独立开发者维护并完全免费开放，如果 EH 帮你省了大量 Token 或研发时间，后续自愿赞助通道（爱发电等）开放后欢迎支持服务器成本。
-- **联系、反馈与申诉**：[pluto@ehbrowser.com](mailto:pluto@ehbrowser.com) · 官网与协议：`https://ehbrowser.com` / `https://ehbrowser.com/terms`。
+- **联系、反馈与申诉**：[pluto@ehbrowser.com](mailto:pluto@ehbrowser.com) · 官网与协议：[https://ehbrowser.com](https://ehbrowser.com/) / [https://ehbrowser.com/terms](https://ehbrowser.com/terms/)。
 
 ---
 
