@@ -195,11 +195,14 @@ Instead of 90,000 tokens of raw HTML or a noisy screenshot, your agent receives 
 
 ## Why Is the Perception Core Hosted?
 
-Event Horizon gives AI agents a new level of reliability on real-world web interfaces — across heavy Shadow DOMs, inline-editable grids, and multi-layer dynamic pages.
+Two straightforward reasons:
 
-With that capability comes responsibility. To prevent misuse and consistently enforce guardrails against high-sensitivity domains (**banking, payments, medical portals, and credential entry**), I host and maintain the perception core myself as an independent developer, while keeping this thin client 100% open and auditable (pure Python stdlib, zero dependencies, running strictly on your local Chrome).
+1. **Core protection:** The viewport compilation core is an independently built engine that I am keeping closed-source for now.
+2. **Practical legal & abuse control:** Browser automation carries real legal, compliance, and misuse risks. Hosting the core lets me keep hard server-side blocks on high-sensitivity targets (**banking, payments, medical portals, and credential entry**) and stop abuse quickly when needed.
 
-**Event Horizon is 100% free — register and use immediately.** No paywall, no credit card, no activation code, no ads, no screenshots uploaded, and zero page-content retention (only lightweight single-concurrency fair-use guardrails keep the shared server responsive for everyone). If EH saves you tokens or engineering hours, **sponsorships** help cover server costs and keep the project moving forward.
+To keep the trust boundary verifiable, this local thin client is **100% open-source (`AGPL-3.0-only`), pure Python stdlib with zero third-party dependencies**, and launches an isolated local Chrome profile on your own machine — your cookies and IP stay local, and you can audit every byte sent over TLS in the source code.
+
+**Event Horizon is 100% free for personal use — register and use immediately.** No paywall, no credit card, no activation code, no ads, no screenshots uploaded, and zero page-content retention (only lightweight single-concurrency fair-use guardrails keep the shared server responsive for everyone). If EH saves you tokens or engineering hours, voluntary sponsorship on [Afdian (爱发电)](https://ifdian.net/a/ehbrowser?tab=home) helps cover server costs.
 
 ---
 
