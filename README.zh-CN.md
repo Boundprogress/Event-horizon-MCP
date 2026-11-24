@@ -204,7 +204,7 @@ py -3 -I -S -B eh.py start
 ```
 
 1. 启动后自动打开本机控制台（支持中英切换）。
-2. **注册并验证邮箱**：完全免费，注册即用，无需等待或激活码。
+2. **使用 GitHub 或 Google 一键登录**（免填表、免 6 位邮箱验证码），也支持常规邮箱注册：完全免费，无需等待或激活码。
 3. 点击 **准备本机使用** → **连接浏览器** 启动专属隔离 Chrome。
 4. 点击 **复制一句话接入**，发给 **Claude Code / Cursor / Codex / OpenCode** 或任意支持 ACP / 本机命令行的桌面 Agent。生成的接入目录支持**三层自动适配**（全程不暴露明文 Key）：
    - **通道 1（标准 stdio MCP）**：`mcp-config.json` / Codex TOML（直接挂载 17 个 `eh_*` 工具）。
@@ -237,7 +237,7 @@ session.close()
 - **完全免费 · 公平使用护栏**：注册即可免费使用，账号采用单并发公平使用限制（`max_sessions=1, max_commands=1`），恶意压测或滥用会被暂停访问；你自己的大模型/Agent 费用另计。
 - 普通公开 HTTP(S) 站点无需逐站白名单；私有网络与**银行、支付、医疗、凭据输入**等高敏感场景默认受限。
 - **欢迎丢给我们你最头疼的网页**：如果某个 Shadow DOM 站点、复杂表格或业务后台把你的 Browser Agent 搞崩了，欢迎直接提 GitHub Issue。
-- **赞助支持**：本项目由独立开发者维护并完全免费开放，如果 EH 帮你省了大量 Token 或研发时间，后续自愿赞助通道（爱发电等）开放后欢迎支持服务器成本。
+- **赞助支持**：本项目由独立开发者维护并完全免费开放，如果 EH 帮你省了大量 Token 或研发时间，欢迎通过 [爱发电（Afdian）](https://ifdian.net/a/ehbrowser?tab=home) 自愿赞助支持服务器成本（§1.4）。
 - **联系、反馈与申诉**：[pluto@ehbrowser.com](mailto:pluto@ehbrowser.com) · 官网与协议：[https://ehbrowser.com](https://ehbrowser.com/) / [https://ehbrowser.com/terms](https://ehbrowser.com/terms/)。
 
 ---

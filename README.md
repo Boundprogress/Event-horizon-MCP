@@ -225,10 +225,10 @@ cd Event-horizon-MCP
 py -3 -I -S -B eh.py start
 ```
 
-### 2. Register & Connect Your Agent (100% Free)
+### 2. Sign In & Connect Your Agent (100% Free)
 
 1. The local console opens automatically in your browser (defaults to **English** on non-Chinese locales; switch anytime in the sidebar).
-2. **Register with your email** — access is **100% free, register & use immediately** (no waitlist, no activation code, no credit card).
+2. **Sign in with one click using GitHub or Google** (no form or 6-digit verification code needed), or register with email &amp; password — access is **100% free** (no waitlist, no activation code, no credit card).
 3. Click **Prepare Local Setup** → **Connect Browser** to launch your isolated local Chrome.
 4. Click **Copy One-Line MCP Setup** and paste it into **Claude Code / Cursor / Codex / OpenCode** — or any ACP / shell-capable desktop agent. The generated connection package automatically adapts across three tiers (without ever exposing your API key):
    - **Tier 1 (Native stdio MCP)**: `mcp-config.json` / Codex TOML (`eh_*` tools).
@@ -271,7 +271,7 @@ We prefer engineering honesty over demo magic:
 Event Horizon is independently built and maintained.
 
 - **Report a tough site or bug**: Open a GitHub Issue with the public URL and what broke — real-world failure cases drive our roadmap.
-- **Sponsor server costs**: If Event Horizon cuts your agent token bills or saves engineering time, voluntary sponsorships will help keep the hosted perception service free and online *(sponsorship link opening soon)*.
+- **Sponsor server costs**: If Event Horizon cuts your agent token bills or saves engineering time, voluntary sponsorship via [Afdian (爱发电)](https://ifdian.net/a/ehbrowser?tab=home) helps keep the hosted perception service free and online (§1.4).
 - **Contact, feedback & appeals**: [pluto@ehbrowser.com](mailto:pluto@ehbrowser.com) · Website & Terms: [https://ehbrowser.com](https://ehbrowser.com/) / [https://ehbrowser.com/terms](https://ehbrowser.com/terms/).
 
 ---

@@ -14,12 +14,12 @@
       "sha256": "1af87ef026ff5bde84b061f9607c77cd8320ca92da1e73a55254a6d0b2828237"
     },
     "README.md": {
-      "bytes": 20004,
-      "sha256": "8e34fae8aebd426e48b25297ed056a42f16058bc49e1f58dbd6e6baffe7fd08e"
+      "bytes": 20116,
+      "sha256": "c612ab2011d435535fca1fd205f1addc177aef0bd66cbcc06eb46bce1449fe3e"
     },
     "README.zh-CN.md": {
-      "bytes": 16414,
-      "sha256": "f997a578d3999792bcd2ff677983c3f9d4fd18d7ad3d58bf806f45b297f86d35"
+      "bytes": 16531,
+      "sha256": "adc05fbe6b3a6e089e2c2ecdadfa83d27cd2baf02e30c4cbd3366f53a195c49c"
     },
     "VERSION": {
       "bytes": 22,
