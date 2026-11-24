@@ -17,6 +17,7 @@ if(capability){try{sessionStorage.setItem('eh-console-access',capability);}catch
 let termsRenderKey=null,appealHistory=null;
 let state=null,busy=false,mode='login',view='overview',reauth=false,closing=false;
 let supportReport=null,displayAccount=null,agentLink=null,agentScope=null;
+let oauthPollTimer=null,oauthActiveProvider=null,oauthAuthorizeUrl=null;
 let awaitingConnectionFeedback=false,displayedNotice=null;
 const titles=labels({overview:'准备好，让浏览器开始工作。',account:'账号与访问状态',diagnostics:'让连接状态清楚可见。'});
 const messages=labels({terms_required:'请阅读并显式确认当前协议后再发起新的网页任务。',terms_update_required:'本机展示的协议与服务端版本或正文不同，请更新客户端后重新阅读。',terms_document_unavailable:'本机协议正文缺失或校验失败，请更新客户端。',invalid_request_reference:'请填写有效请求号：1–64 位字母、数字、点、下划线或短横线。',session_not_found:'未找到该任务。请核对原编号和当前账号；查询结果不代表可以重放操作。',request_not_found:'未找到该请求。请核对原编号；不要据此认定操作未执行或直接重放。',forbidden:'当前账号无权读取该记录。',unauthorized:'当前 Key 无效，请核对凭据。',invalid_remote_response:'服务返回格式异常，请稍后按原编号查询。',active_key_exists_rotate_required:'账号已有连接配置，请刷新状态后在连接诊断中核对。',active_key_changed_refresh_required:'有效 Key 已变化，请刷新核对后再操作。',subscription_disabled:'账号权益已停用，请联系运营核对；重复激活不会解除停用。',subscription_quota:'可用额度已用完，请查看账号额度。',subscription_not_started:'订阅尚未开始。',invalid_identifier:'名称仅支持 1–64 位英文字母、数字、点、下划线和短横线。',invalid_username:'用户名须为 1–64 个字符，支持中文和自定义名称；请勿使用控制字符或不可见字符。',console_access_required:'请从启动器重新打开控制台链接。',invalid_credentials:'用户名或密码不正确。',username_taken:'该用户名已注册，请登录。',account_login_required:'登录已过期，请重新登录。',login_required:'请先登录。',subscription_inactive:'账号尚无可用权益，请刷新账号额度；若未显示注册额度，请联系运营核对。',subscription_expired:'订阅已到期。',quota_exhausted:'可用额度已用完，请查看账号额度。',credentials_required:'请先点击准备本机使用，完成连接配置。',service_update_required:'服务端尚未升级到支持协议版本的版本，暂时无法注册；请联系运营更新服务。',previous_operation_requires_review:'上次请求尚未确认，请先核对远端状态。',response_unknown_check_remote_state:'响应未确认，操作可能已生效。请刷新并核对状态，不要重复提交。',disconnect_or_review_previous_connection:'请先断开浏览器；若上次异常退出，需要核实原浏览器的退出状态。',device_already_registered_rotate_if_credential_lost:'设备已经登记。若本机凭据丢失，请核对后换发设备凭据。',device_not_registered:'请先登记设备。',operation_in_progress:'上一个操作仍在处理中，请稍候。',api_key_limit:'Key 历史记录已达上限，请联系运营。',chrome_not_found:'未找到 Chrome，请先安装 Chrome。',private_directory_required:'数据目录必须仅供当前用户访问。',device_waiting_for_hub:'设备变更已保存，连接服务尚未确认应用；这还不代表设备已连接。',previous_connection_unconfirmed:'上次连接未确认退出。请到连接诊断点击“核实退出并恢复连接”，保留原数据目录。',browser_recovery_connection_running:'旧连接器仍在运行。请先点击断开浏览器，等待退出后再核实。',browser_recovery_directory_unverified:'原浏览器目录未通过核实，请保留原数据目录并联系支持人员检查。',browser_recovery_unconfirmed:'退出仍未确认。请先关闭旧 EH 工作浏览器并停止旧 EH 客户端连接，再点击核实；若仍失败，请保留原数据目录并提供诊断摘要。'});
@@ -25,6 +26,7 @@ Object.assign(messages,{activation_code_invalid_or_unavailable:'激活码无效�
 Object.assign(messages,{email_code_invalid_or_expired:'验证码不正确、已过期或已使用。请核对6位数字，或点击重新申请。',email_already_registered:'该邮箱已关联账号，请使用账号找回，或换一个邮箱。',email_in_use:'该邮箱已关联账号，请使用账号找回，或换一个邮箱。',email_unavailable:'该邮箱暂不可用于注册，请使用账号找回或换一个邮箱。',email_required:'注册时请填写邮箱，并在注册后完成邮箱验证。',email_verification_required:'请先在账号页完成注册邮箱验证，再准备本机连接配置或发起任务。',disposable_email_not_allowed:'暂不支持临时/一次性邮箱，请使用常用真实邮箱注册。',registration_ip_rate_limited:'当前网络注册过于频繁，请稍后再试。',region_not_supported:'当前网络所在地区暂不提供注册服务（详见协议第 2.1 条）。如系地域误判，请发邮件至 pluto@ehbrowser.com 申请人工复核。',email_not_pending:'当前没有待验证的注册邮箱，请刷新账号状态。',recovery_response_unknown_restart:'找回响应未确认，原操作可能已生效；不会自动重试。请尝试新密码登录，或点击重新申请验证码。',email_response_unknown_restart:'邮箱验证响应未确认，原操作可能已生效；不会自动重试。请刷新邮箱状态，未验证时可明确重新发送验证码。'});
 Object.assign(messages,{appeal_request_conflict:'该申诉请求号已用于不同内容，请查询原申诉。',appeal_pending_exists:'已有待处理申诉，请查询处理状态。',appeal_not_eligible:'账号当前没有受限审核标记，请刷新状态；未激活或到期请按激活/续期流程处理。',appeal_state_changed:'账号或申诉状态已变化，请重新查询。',invalid_appeal_reason:'请填写1–1000字申诉说明，勿包含密码、验证码、Key、凭据或网页任务正文。',appeals_service_update_required:'当前控制台或服务端尚未支持站内申诉，请更新客户端并联系运营。现有状态查询和账号功能可继续使用。',appeal_rate_limited:'申诉提交过于频繁，请等待现有处理或稍后再试。',appeal_query_required:'请先按原请求号查到本人申诉，再解除本机核对提示。'});
 Object.assign(messages,{subscription_plan_conflict:'当前账号的套餐类型不同，不能直接叠加。有效月套餐请到期后兑换永久额度；永久额度账号请使用永久激活码充值。',lifetime_frame_limit_exceeded:'永久总额度超过上限，请联系运营核对。'});
+Object.assign(messages,{oauth_access_denied:'第三方授权已取消，可随时重试。',oauth_flow_expired:'本次第三方登录已超时，请重新点击登录。',oauth_flow_consumed:'本次第三方登录已完成或失效，请重新点击登录。',oauth_verified_email_required:'第三方账号需要绑定一个已验证邮箱才能完成注册。',oauth_provider_not_enabled:'第三方登录暂未在当前服务端启用。',oauth_rate_limited:'第三方登录请求过于频繁，请稍后再试。',oauth_provider_unreachable:'第三方登录服务暂时不可达，请稍后重试。',oauth_token_exchange_failed:'第三方登录服务暂时不可达，请稍后重试。',oauth_userinfo_failed:'第三方登录服务暂时不可达，请稍后重试。',oauth_provider_error:'第三方登录服务暂时不可达，请稍后重试。',oauth_failed:'第三方登录服务暂时不可达，请稍后重试。'});
 function errorMessage(e){return messages[e.code]||(t("操作未完成：")+(e.code||'connection_to_console_failed'));}
 async function request(path,body,signal){let result;try{result=await fetch('/api/'+path,{method:body===undefined?'GET':'POST',headers:{Authorization:'Bearer '+capability,...(body===undefined?{}:{'Content-Type':'application/json'})},body:body===undefined?undefined:JSON.stringify(body),cache:'no-store',credentials:'omit',redirect:'error',signal});}catch(_){throw {code:'response_unknown_check_remote_state'};}
 let value;try{value=await result.json();}catch(_){throw {code:'response_unknown_check_remote_state'};}
@@ -192,7 +194,7 @@ function updateConnectionFeedback(){if(!awaitingConnectionFeedback)return;const 
  if(c.status==='connected')say(()=>t("专属浏览器已连接，可以让 Agent 发起任务。"));
  else if(['failed','stopped','cleanup_unknown'].includes(c.status))say(()=>t("连接未成功。")+connectionFailureMessage(),true);
 }
-function render(){if(!state||closing)return;const scope=currentAgentScope();if(scope!==agentScope){clearAgentLink();agentScope=scope;}const identity=state.signed_in?state.account:null;if(identity!==displayAccount){clearAccountViews();displayAccount=identity;}renderServerNotices();renderUpdates();renderOnboarding();renderAppeals();const s=state,cloud=s.cloud,c=s.connection||{},running=c.running===true||c.status==='starting'||c.status==='connected',ready=s.credentials.api_ready&&s.credentials.device_ready;
+function render(){if(!state||closing)return;const scope=currentAgentScope();if(scope!==agentScope){clearAgentLink();agentScope=scope;}const identity=state.signed_in?state.account:null;if(identity!==displayAccount){clearAccountViews();displayAccount=identity;}renderServerNotices();renderUpdates();renderOnboarding();renderAppeals();renderOAuth();const s=state,cloud=s.cloud,c=s.connection||{},running=c.running===true||c.status==='starting'||c.status==='connected',ready=s.credentials.api_ready&&s.credentials.device_ready;
 $('auth').hidden=s.signed_in&&!reauth;$('recovery').hidden=s.signed_in&&!reauth;$('workspace').hidden=!s.signed_in||reauth;uiText($('endpoint'),()=>s.endpoint);uiText($('auth-endpoint'),()=>s.endpoint);uiText($('version'),()=>'EH / '+s.version);
 uiText($('username'),()=>s.username||t("账号"));
 const pendingSnapshot=s.pending?{...s.pending}:null;
@@ -302,6 +304,71 @@ document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>choose(b.datas
 function authMode(next){mode=next;$('recovery-entry').hidden=next!=='login';$('login-tab').classList.toggle('selected',next==='login');$('register-tab').classList.toggle('selected',next==='register');$('confirmation-label').hidden=next!=='register';$('registration-email-label').hidden=next!=='register';$('auth-form').elements.email.required=next==='register';if($('terms-key-notice'))$('terms-key-notice').hidden=next!=='register';$('terms-label').hidden=next!=='register';$('auth-form').elements.terms.required=next==='register';uiText($('auth-submit'),()=>next==='register'?t("创建账号"):t("登录"));$('auth-form').elements.confirmation.required=next==='register';$('auth-form').elements.password.autocomplete=next==='register'?'new-password':'current-password';}
 $('login-tab').onclick=()=>authMode('login');$('register-tab').onclick=()=>authMode('register');
 $('recovery-entry').onclick=()=>{if(busy||state?.pending)return;$('recovery-details').open=true;const stage=state?.account_recovery?.stage||'request';const form=$(stage==='reset'?'recovery-reset-form':stage==='code'?'recovery-code-form':'recovery-request-form');form.scrollIntoView({block:'center'});form.querySelector('input').focus({preventScroll:true});};
+function oauthLabel(p){return p==='github'?'GitHub':p==='google'?'Google':'OAuth';}
+function stopOAuthPolling(){if(oauthPollTimer){clearInterval(oauthPollTimer);oauthPollTimer=null;}oauthActiveProvider=null;oauthAuthorizeUrl=null;}
+function renderOAuth(){
+ const block=$('oauth-block');if(!block)return;
+ const providers=Array.isArray(state?.oauth_providers)?state.oauth_providers:[];
+ const gh=$('oauth-github'),gg=$('oauth-google'),prog=$('oauth-progress'),openLink=$('oauth-open-link');
+ const hasGh=providers.includes('github'),hasGg=providers.includes('google');
+ block.hidden=!(hasGh||hasGg);
+ if(gh){gh.hidden=!hasGh;gh.disabled=busy||closing||Boolean(state?.pending);}
+ if(gg){gg.hidden=!hasGg;gg.disabled=busy||closing||Boolean(state?.pending);}
+ const active=oauthActiveProvider||state?.oauth_flow?.provider||null;
+ if(prog){
+  prog.hidden=!active;
+  if(active)uiText($('oauth-progress-text'),()=>t("正在浏览器标签页中等待 {p0} 授权登录…",{p0:oauthLabel(active)}));
+ }
+ if(openLink){
+  openLink.hidden=!oauthAuthorizeUrl||!active;
+  if(oauthAuthorizeUrl)openLink.href=oauthAuthorizeUrl;else openLink.removeAttribute('href');
+ }
+}
+async function pollOAuthOnce(){
+ if(!oauthActiveProvider||closing||busy)return;
+ try{
+  const res=await request('oauth_poll',{});
+  if(res.status==='pending')return;
+  const prov=oauthLabel(oauthActiveProvider);
+  stopOAuthPolling();
+  if(res.status==='completed'){
+   reauth=false;
+   await load();
+   const needsTerms=state?.cloud?.terms&&state.cloud.terms.current!==true;
+   say(()=>needsTerms?t("已通过 {p0} 登录，请先确认下方协议后即可开始使用。",{p0:prov}):t("已通过 {p0} 登录成功。",{p0:prov}));
+  }else if(res.status==='failed'){
+   await load();
+   say(()=>errorMessage({code:res.error||'oauth_failed'}),true);
+  }else{
+   renderOAuth();
+  }
+ }catch(e){
+  if(e?.code==='operation_in_progress')return;
+  stopOAuthPolling();
+  renderOAuth();
+ }
+}
+async function startOAuth(provider){
+ if(busy||closing||state?.pending)return;
+ stopOAuthPolling();
+ busy=true;render();
+ try{
+  const res=await request('oauth_start',{provider,ui_locale:panelI18n?.getLanguage()||'en'});
+  oauthActiveProvider=provider;
+  oauthAuthorizeUrl=res.authorize_url||null;
+  if(oauthAuthorizeUrl){try{window.open(oauthAuthorizeUrl,'_blank','noopener');}catch(_){}}
+  oauthPollTimer=setInterval(pollOAuthOnce,1500);
+ }catch(e){
+  stopOAuthPolling();
+  say(()=>errorMessage(e),true);
+ }finally{
+  busy=false;render();
+ }
+}
+if($('oauth-github'))$('oauth-github').onclick=()=>startOAuth('github');
+if($('oauth-google'))$('oauth-google').onclick=()=>startOAuth('google');
+if($('oauth-cancel'))$('oauth-cancel').onclick=async()=>{stopOAuthPolling();try{await request('oauth_cancel',{});}catch(_){}renderOAuth();};
+
 $('auth-form').onsubmit=async e=>{e.preventDefault();const f=e.currentTarget;if(mode==='register'&&f.elements.password.value!==f.elements.confirmation.value){say(()=>t("两次密码输入不一致。"),true);return;}if(mode==='register'&&!f.elements.terms.checked){say(()=>t("请先阅读并同意《Event Horizon 使用协议与合规使用承诺》。"),true);return;}const body={username:f.elements.username.value,password:f.elements.password.value};if(Array.from(body.username.normalize('NFC').trim()).length>64){say(()=>messages.invalid_username,true);return;}if(mode==='register'){body.email=f.elements.email.value.trim();body.terms_accepted=true;body.terms_version=state?.terms_document?.version;body.terms_sha256=state?.terms_document?.sha256;body.ui_locale=panelI18n?.getLanguage()||'en';body.consent_surface='register_key_notice_v1';}f.elements.password.value='';f.elements.confirmation.value='';await act(mode,body);body.password='';};
 $('password-form').onsubmit=async e=>{e.preventDefault();const f=e.currentTarget;if(f.elements.new_password.value!==f.elements.confirmation.value){say(()=>t("两次新密码输入不一致。"),true);return;}const body={old_password:f.elements.old_password.value,new_password:f.elements.new_password.value};f.reset();await act('password',body);body.old_password=body.new_password='';};
 $('activation-form').onsubmit=async e=>{e.preventDefault();const f=e.currentTarget,body={code:f.elements.code.value.trim()};f.reset();try{await act('redeem',body);}finally{body.code='';}};

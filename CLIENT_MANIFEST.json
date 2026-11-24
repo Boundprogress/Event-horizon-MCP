@@ -113,25 +113,29 @@
       "bytes": 118788,
       "sha256": "07697eed6557ea3a90f93c5a73ee76ae3cec135aa5735882ef218f10aad817bb"
     },
+    "glama.json": {
+      "bytes": 104,
+      "sha256": "4dc16a68c8e01a89df26d3d6e95ba3a8e0979b51e8756ea7af8702f1e5c81bc9"
+    },
     "panel.css": {
-      "bytes": 21400,
-      "sha256": "6eac2b792cfd74b7972cd76ac638d9c2b047f52e7ff8fc4e2f26892441deef3e"
+      "bytes": 22374,
+      "sha256": "03951e9351e76817623a90a49fe5fa120e64b11fb7e97d3b4523c34cf93a91ed"
     },
     "panel.html": {
-      "bytes": 45717,
-      "sha256": "1019b3e62ea049d248d808916a0a0e0edcb1e440df13759a8eea91aac37f7b2b"
+      "bytes": 48045,
+      "sha256": "29c92fa86484908bda6ff92bdb721aae754510d3d77da89774d1fe444c7bf9a7"
     },
     "panel.js": {
-      "bytes": 66289,
-      "sha256": "818bb557846df94527472cbbae2a10ae159c288937d72490ccf20c60c751ac9d"
+      "bytes": 70081,
+      "sha256": "1971b6f42f20b35e15eb15f4b61b1c6d73db97eea3525726c1cbf0ef9fd492da"
     },
     "panel.py": {
-      "bytes": 74165,
-      "sha256": "a5faa4759dc54b85b9064c2909d390f677316749055fcd0560637930f05f64b5"
+      "bytes": 80655,
+      "sha256": "cb084baf86bb286520c0b2b4fa03fd8d03f3670f5fb2f7572d2eccc5d3629855"
     },
     "panel_i18n.js": {
-      "bytes": 66161,
-      "sha256": "61e6c730934f00b39fc467c75bdce94c738263aef7e99ddf592cf772ed1935c9"
+      "bytes": 67597,
+      "sha256": "6132745f86eea865e58848ea412d9655e91bc2113e8e84cbea3147f59d99cf20"
     },
     "sensitive_domains.json": {
       "bytes": 2032,

@@ -526,7 +526,22 @@ const english=Object.freeze({
   "个人免费非商业使用：仅限个人、非商业、非生产用途（含个人购物、订票等事务），禁止商业生产或代客运营部署。": "Personal, Non-Commercial Use Only: Free for individual non-commercial use (including occasional personal errands like shopping or booking); commercial production or client-delivery deployment is prohibited.",
   "地域限制：暂不面向中国大陆、EEA、英国、瑞士及制裁地区提供服务；如系地域误判，可发邮件至 pluto@ehbrowser.com 申请人工复核。": "Territorial Restriction: Not offered to Mainland China, the EEA, the UK, Switzerland, or sanctioned territories; email pluto@ehbrowser.com for manual review of mistaken blocks.",
   "感知边界与外部模型独立性：EH 仅为浏览器感知工具，不保证所有网站或技术栈均 100% 准确转译；任务决策与结果受外部 AI 模型能力及用户指令约束。": "Perception Boundary & External Model Dependence: EH is a perception tool only, with no guarantee of 100% translation accuracy across all sites/frameworks; outcomes depend on your chosen AI model and instructions.",
-  "现状提供、责任上限与争议管辖：免费按“现状”提供，在适用强制法律允许范围内责任上限为 USD $0；本协议适用中华人民共和国法律，争议由维护者住所地有管辖权的人民法院管辖。": "AS-IS, Liability Cap & Governing Law: Provided free \"AS IS\" with a USD $0 aggregate cap to the fullest extent permitted by mandatory law; governed by PRC law with exclusive jurisdiction at the Maintainer's domicile court."
+  "现状提供、责任上限与争议管辖：免费按“现状”提供，在适用强制法律允许范围内责任上限为 USD $0；本协议适用中华人民共和国法律，争议由维护者住所地有管辖权的人民法院管辖。": "AS-IS, Liability Cap & Governing Law: Provided free \"AS IS\" with a USD $0 aggregate cap to the fullest extent permitted by mandatory law; governed by PRC law with exclusive jurisdiction at the Maintainer's domicile court.",
+  "使用 GitHub 一键登录": "Continue with GitHub",
+  "使用 Google 一键登录": "Continue with Google",
+  "或使用用户名密码": "or use username & password",
+  "重新打开授权页": "Re-open authorization tab",
+  "取消": "Cancel",
+  "正在浏览器标签页中等待 {p0} 授权登录…": "Waiting for {p0} sign-in in your browser tab…",
+  "第三方授权已取消，可随时重试。": "Sign-in was cancelled. You can try again anytime.",
+  "本次第三方登录已超时，请重新点击登录。": "Sign-in timed out. Please try again.",
+  "本次第三方登录已完成或失效，请重新点击登录。": "This sign-in flow has already finished or expired. Please try again.",
+  "第三方账号需要绑定一个已验证邮箱才能完成注册。": "Your provider account needs a verified email address to sign up.",
+  "第三方登录暂未在当前服务端启用。": "This third-party sign-in provider is not enabled on this server.",
+  "第三方登录请求过于频繁，请稍后再试。": "Too many sign-in attempts. Please wait a moment and try again.",
+  "第三方登录服务暂时不可达，请稍后重试。": "Could not reach the sign-in provider. Please try again shortly.",
+  "已通过 {p0} 登录成功。": "Signed in with {p0}.",
+  "已通过 {p0} 登录，请先确认下方协议后即可开始使用。": "Signed in with {p0}. Please confirm the Terms below to start."
 });
 const storageKey='eh-panel-language';
 const supported=value=>value==='en'||value==='zh-CN';

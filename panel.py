@@ -39,9 +39,11 @@ MAX_BODY = 8192
 ASSETS = {'/': ('panel.html', 'text/html; charset=utf-8'), '/terms': ('terms.html', 'text/html; charset=utf-8'), '/panel_i18n.js': ('panel_i18n.js', 'text/javascript; charset=utf-8'), '/panel.js': ('panel.js', 'text/javascript; charset=utf-8'), '/panel.css': ('panel.css', 'text/css; charset=utf-8')}
 RECOVERY_OPS = {'email_request','email_verify','email_change_request','email_change_confirm','recovery_request','recovery_reset','recovery_manual_request','recovery_manual_confirm'}
 CODE_OPS = {'email_code_request', 'email_code_verify', 'recovery_code_request', 'recovery_code_verify', 'recovery_code_reset', 'recovery_cancel'}
+OAUTH_OPS = {'oauth_start', 'oauth_poll', 'oauth_cancel'}
 OPERATIONS = RECOVERY_OPS | {'redeem', 'prepare', 'activation_receipts', 'support_export', 'agent_export', 'update_check', 'update_apply', 'quit', 'register', 'login', 'logout', 'password', 'refresh', 'key_create', 'key_rotate', 'key_revoke', 'device_enroll', 'device_rotate', 'device_revoke', 'device_enable', 'check', 'diagnose', 'connect', 'disconnect', 'acknowledge'}
 OPERATIONS.update({'agent_connect', 'terms_accept', 'recover_browser'})
 OPERATIONS.update(CODE_OPS)
+OPERATIONS.update(OAUTH_OPS)
 OPERATIONS.update({'appeals', 'appeal_create', 'appeal_release_unknown', 'notices'})
 AGENT_CONNECT_ERRORS = {'agent_connect_account_required', 'agent_connect_credentials_required',
     'agent_connect_account_changed', 'agent_connect_private_directory_required', 'agent_connect_write_failed',
@@ -51,6 +53,7 @@ CLEAN = {'verified_snapshot_stopped', 'observed_after_cleanup_error', 'not_start
 ERRORS |= {'terms_required', 'terms_update_required', 'terms_document_unavailable', 'activation_code_invalid_or_unavailable', 'activation_request_conflict', 'activation_rate_limited', 'subscription_reactivation_review_required', 'subscription_plan_conflict', 'lifetime_frame_limit_exceeded'}
 ERRORS |= {'email_code_invalid_or_expired', 'email_already_registered', 'email_in_use', 'email_unavailable', 'email_verification_required', 'email_required', 'email_not_pending', 'disposable_email_not_allowed', 'registration_ip_rate_limited', 'region_not_supported'}
 ERRORS |= {'appeal_request_conflict','appeal_pending_exists','appeal_not_eligible','appeal_state_changed','appeal_rate_limited','invalid_appeal_reason','invalid_public_result'}
+ERRORS |= {'oauth_provider_not_enabled', 'oauth_rate_limited', 'oauth_access_denied', 'oauth_provider_error', 'oauth_provider_unreachable', 'oauth_token_exchange_failed', 'oauth_userinfo_failed', 'oauth_verified_email_required', 'invalid_oauth_flow', 'oauth_flow_expired', 'oauth_flow_consumed', 'invalid_or_expired_oauth_state', 'oauth_failed', 'registration_capacity', 'login_session_limit'}
 
 
 def sibling(name):
@@ -462,6 +465,7 @@ class Console:
 
 
         self.email_code_flow=None;self.recovery_code_flow=None
+        self.oauth_flow=None;self.oauth_providers=[];self.oauth_providers_at=0.0
         self.appeal_confirmation=None
         self.lock=threading.Lock();self.connection=Connection(self.setup);self.cloud=None;self.cloud_at=None;self.notice=None;self.quit_requested=False;self.update_requested=False;self.updates=updates or UpdateBridge()
         self.server_notices=[];self.server_notices_at=0.0
@@ -538,12 +542,21 @@ class Console:
 
     def snapshot(self):
         d=self.store.data;c=self.sync_connection()
+        if not d.get('login_file') and self.oauth_providers_at == 0.0:
+            self.refresh_oauth_providers(force=True)
+        oauth_status = None
+        if self.oauth_flow:
+            if self.oauth_flow['expires_at'] <= time.time():
+                self.oauth_flow = None
+            else:
+                oauth_status = {'provider': self.oauth_flow['provider'], 'expires_at': self.oauth_flow['expires_at']}
         value = {'endpoint':d['endpoint'],'version':(HERE/'VERSION').read_text().strip() if (HERE/'VERSION').exists() else (HERE.parent/'VERSION').read_text().strip(),
                 'username':d.get('username'),'signed_in':bool(d.get('login_file')),'account':d.get('account'),
                 'credentials':{'api_ready':bool(d.get('key_file')),'device_ready':bool(d.get('device_file')),'key_id':d.get('key_id'),
                     'api_path':str(self.store.root/d['key_file']) if d.get('key_file') else None},
                 'connection':c,'cloud':self.cloud,'cloud_checked_at':self.cloud_at,'pending':d.get('pending'),
                 'notice':self.notice,'server_notices':list(self.server_notices),'payment':'not_configured','updates':self.updates.snapshot(),
+                'oauth_providers':list(self.oauth_providers),'oauth_flow':oauth_status,
                 'terms_document':terms_document()}
         value['onboarding'] = onboarding(value)
         value['email_verification'] = self.code_status('email')
@@ -563,6 +576,25 @@ class Console:
             if kind == 'recovery' and flow['stage'] == 'reset': result['username'] = flow['username']
         return result
 
+    def refresh_oauth_providers(self, force=False):
+        now = time.time()
+        if not force and now - self.oauth_providers_at < 60:
+            return list(self.oauth_providers)
+        self.oauth_providers_at = now
+        try:
+            endpoint = self.store.data.get('endpoint', '')
+            if not isinstance(endpoint, str) or not endpoint.startswith(('https://', 'http://127.0.0.1', 'http://localhost')):
+                return list(self.oauth_providers)
+            res = self.remote({'endpoint': endpoint, 'token': 'anonymous-placeholder', 'timeout': 6},
+                              [{'method': 'GET', 'path': '/account/oauth/providers'}])[0]
+            if res.get('status') == 200 and isinstance(res.get('value'), dict):
+                raw = res['value'].get('providers')
+                if isinstance(raw, list):
+                    self.oauth_providers = [p for p in ('github', 'google') if p in raw]
+        except Exception:
+            pass
+        return list(self.oauth_providers)
+
     def refresh_public_notices(self, force=False):
         now = time.time()
         if not force and now - self.server_notices_at < 60:
@@ -578,7 +610,90 @@ class Console:
                 self.server_notices_at = now
         except Exception:
             pass
+        self.refresh_oauth_providers(force=force)
         return list(self.server_notices)
+
+    def oauth_operation(self, op, body):
+        if op == 'oauth_cancel':
+            fields(body, set())
+            self.oauth_flow = None
+            return {'status': 'cancelled'}
+        if self.store.data.get('pending'):
+            raise PanelError('previous_operation_requires_review')
+        self.disconnected()
+        d = self.store.data
+        cfg = {'endpoint': d['endpoint'], 'token': 'anonymous-placeholder', 'timeout': 12}
+        if op == 'oauth_start':
+            fields(body, {'provider'}, optional=('ui_locale',))
+            provider = body['provider']
+            if provider not in ('github', 'google'):
+                raise PanelError('oauth_provider_not_enabled', 400)
+            payload = {'provider': provider}
+            if isinstance(body.get('ui_locale'), str) and body['ui_locale'] in {'en', 'zh-CN'}:
+                payload['ui_locale'] = body['ui_locale']
+            ver = _client_version()
+            if ver:
+                payload['client_version'] = ver
+            response = self.remote(cfg, [{'method': 'POST', 'path': '/account/oauth/start', 'body': payload}])[0]
+            v = self.result(response)
+            flow_id = text(v.get('flow_id'), 64)
+            poll_secret = text(v.get('poll_secret'), 256)
+            auth_url = text(v.get('authorize_url'), 2048)
+            expires_in = v.get('expires_in', 600)
+            allowed_prefix = ('https://github.com/login/oauth/authorize?' if provider == 'github'
+                              else 'https://accounts.google.com/o/oauth2/v2/auth?')
+            if (not auth_url.startswith(allowed_prefix)
+                    or type(expires_in) is not int or not 30 <= expires_in <= 1800):
+                raise PanelError('invalid_remote_response')
+            self.oauth_flow = {
+                'provider': provider,
+                'flow_id': flow_id,
+                'poll_secret': poll_secret,
+                'expires_at': time.time() + expires_in,
+            }
+            return {'status': 'started', 'provider': provider, 'authorize_url': auth_url, 'expires_in': expires_in}
+        fields(body, set())
+        flow = self.oauth_flow
+        if not flow:
+            return {'status': 'idle'}
+        if flow['expires_at'] <= time.time():
+            self.oauth_flow = None
+            return {'status': 'failed', 'error': 'oauth_flow_expired'}
+        response = self.remote(cfg, [{'method': 'POST', 'path': '/account/oauth/poll',
+                                      'body': {'flow_id': flow['flow_id'], 'poll_secret': flow['poll_secret']}}])[0]
+        if isinstance(response, dict) and response.get('status') == 410:
+            code = (response.get('value') or {}).get('error', 'oauth_flow_expired')
+            self.oauth_flow = None
+            return {'status': 'failed', 'error': code if code in ERRORS else 'oauth_flow_expired'}
+        v = self.result(response)
+        status = v.get('status')
+        if status == 'pending':
+            return {'status': 'pending', 'provider': flow['provider']}
+        if status == 'failed':
+            err = v.get('error')
+            self.oauth_flow = None
+            return {'status': 'failed', 'error': err if isinstance(err, str) and err in ERRORS else 'oauth_failed'}
+        if status != 'completed':
+            raise PanelError('invalid_remote_response')
+        aid = text(v.get('account'))
+        name = text(v.get('username'))
+        token = text(v.get('token'), 512)
+        if not token.startswith('ehs_'):
+            raise PanelError('invalid_remote_response')
+        filename = self.store.save_credential(self.setup.api_config(dict(cfg, token=token)))
+        if d.get('account') != aid:
+            d.update(key_file=None, key_id=None, device_file=None)
+            if (d.get('connection') or {}).get('clean') is True:
+                d['connection'] = None
+        d.update(account=aid, username=name, login_file=filename)
+        self.cloud = None; self.cloud_at = None; self.last_diagnostic = None
+        self.email_code_flow = None; self.recovery_code_flow = None; self.oauth_flow = None
+        self.store.commit()
+        try:
+            self.refresh()
+        except Exception:
+            pass
+        return {'status': 'completed', 'username': name, 'is_new_account': v.get('is_new_account') is True}
 
     def forget_identity(self):
         self.store.data.update(account=None, username=None, login_file=None,
@@ -1000,6 +1115,7 @@ class Console:
         if op not in OPERATIONS:raise PanelError('unknown_operation',404)
         if self.quit_requested:raise PanelError('client_closing')
         if op in CODE_OPS: return self.code_operation(op,body)
+        if op in OAUTH_OPS: return self.oauth_operation(op,body)
         if op=='appeals':
             if set(body) not in (set(),{'request_id'}):raise PanelError('invalid_fields',400)
             return self.appeal_list(body.get('request_id'))
