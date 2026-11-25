@@ -5,6 +5,10 @@
       "bytes": 208,
       "sha256": "7204bdf4e34a861b93e8dd14e2c12015933d9043498fc3151f4f4e9ba96e4d1b"
     },
+    "CHANGELOG.md": {
+      "bytes": 4821,
+      "sha256": "c403789d6517750e9b206ae2b302d38db43e5055dc64139ac5ad30c275b9c637"
+    },
     "LICENSE": {
       "bytes": 34523,
       "sha256": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0"
@@ -14,12 +18,12 @@
       "sha256": "1af87ef026ff5bde84b061f9607c77cd8320ca92da1e73a55254a6d0b2828237"
     },
     "README.md": {
-      "bytes": 20366,
-      "sha256": "3c33895076d5906831cff83b297e3a1636fb0ae42ae65eec8e96d168d4b6a1a7"
+      "bytes": 20395,
+      "sha256": "3e106e57bb2b71289115c24f871eda1d709ab0a9b33dc468329d2d24f844d0f8"
     },
     "README.zh-CN.md": {
-      "bytes": 16781,
-      "sha256": "a6b1b029a1d4df26a44811563d8e748d828bf51291b953129ac4a32171640320"
+      "bytes": 16813,
+      "sha256": "177328ace507c7437adfb73da9e1f521568fbcc4289e4dcdbd673d3407cd0c6d"
     },
     "VERSION": {
       "bytes": 22,

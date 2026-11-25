@@ -6,7 +6,7 @@
 
 **Compiled Viewport Perception over MCP — 91.9% fewer tokens, 0 occluded clicks, zero site rules.**
 
-[English](README.md) · [中文](README.zh-CN.md) · [Website](https://ehbrowser.com/) · [Quickstart (100% Free)](#60-second-quickstart-100-free--register--use) · [Benchmarks](#proof-compiled-perception-vs-dom--vision) · [Why Hosted & Free](#why-is-the-perception-core-hosted)
+[English](README.md) · [中文](README.zh-CN.md) · [Website](https://ehbrowser.com/) · [Changelog](CHANGELOG.md) · [Quickstart (100% Free)](#60-second-quickstart-100-free--register--use) · [Benchmarks](#proof-compiled-perception-vs-dom--vision) · [Why Hosted & Free](#why-is-the-perception-core-hosted)
 
 </div>
 
