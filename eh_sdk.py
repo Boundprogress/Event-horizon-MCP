@@ -153,6 +153,7 @@ class EHSession:
         frame_id=None,
         request_id=None,
         wait_seconds=None,
+        close_session=False,
         **extra,
     ):
         fid = frame_id or self.frame_id
@@ -173,6 +174,8 @@ class EHSession:
             args["basis"] = basis
         if wait_seconds is not None:
             args["wait_seconds"] = wait_seconds
+        if close_session:
+            args["close_session"] = True
         args.update(extra)
         return self._client.call("eh_terminal", args)
 
@@ -300,12 +303,25 @@ class EventHorizonClient:
             args["create_request_id"] = create_request_id
         return self.call("eh_session", args)
 
-    def open_session(self, objective, start_url, *, request_id=None):
+    def open_session(
+        self,
+        objective,
+        start_url,
+        *,
+        request_id=None,
+        auto_perceive=False,
+        perceive_request_id=None,
+        wait_seconds=None,
+    ):
         rid = request_id or f"create-{uuid.uuid4().hex[:12]}"
-        created = self.call(
-            "eh_create_session",
-            {"objective": objective, "start_url": start_url, "request_id": rid},
-        )
+        args = {"objective": objective, "start_url": start_url, "request_id": rid}
+        if auto_perceive:
+            args["auto_perceive"] = True
+            if perceive_request_id is not None:
+                args["perceive_request_id"] = perceive_request_id
+            if wait_seconds is not None:
+                args["perceive_wait_seconds"] = wait_seconds
+        created = self.call("eh_create_session", args)
         sid = created.get("session_id") or (created.get("session") or {}).get("id")
         if not isinstance(sid, str) or not sid:
             raise EHSDKError("missing_session_id", created)

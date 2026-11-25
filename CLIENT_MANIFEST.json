@@ -6,8 +6,8 @@
       "sha256": "7204bdf4e34a861b93e8dd14e2c12015933d9043498fc3151f4f4e9ba96e4d1b"
     },
     "CHANGELOG.md": {
-      "bytes": 4821,
-      "sha256": "c403789d6517750e9b206ae2b302d38db43e5055dc64139ac5ad30c275b9c637"
+      "bytes": 6179,
+      "sha256": "02dbee47d4dd5239e1cee1d3d4ec9a1018052b1b542fe207ba29b733f8aa7c8b"
     },
     "LICENSE": {
       "bytes": 34523,
@@ -110,12 +110,12 @@
       "sha256": "c2bc0bbdbdac13860e72933b921e4e923c91e6273fb53136be3001ad32ae9f1e"
     },
     "eh_sdk.py": {
-      "bytes": 11753,
-      "sha256": "d0133c7e74b5365ddec4149012b7d50c8933ebf0b656ea4b8452506624d85b72"
+      "bytes": 12254,
+      "sha256": "a101d8dfabff401f3945e5b59364ea6e40c35cd7b9f560b5b6b5dded27352b1d"
     },
     "example_agent.py": {
-      "bytes": 118788,
-      "sha256": "07697eed6557ea3a90f93c5a73ee76ae3cec135aa5735882ef218f10aad817bb"
+      "bytes": 123271,
+      "sha256": "f271a2c2bb0c4343afa97d28e1d5ec987a61c1b568015c68c4ab18a4ec194c8c"
     },
     "glama.json": {
       "bytes": 104,
@@ -154,8 +154,8 @@
       "sha256": "537bd0d3c0b2ec4f0516a2512fee42644f1183568d69b82d605e58f8964fa123"
     },
     "skills/eh-subscription-browser/SKILL.md": {
-      "bytes": 7786,
-      "sha256": "9068b895b19f56de157c7f52b2915f247377d2daac3e5346ef5ab13d57b8b2df"
+      "bytes": 8310,
+      "sha256": "53056b5d82ab5c8785e3896bb00b899b32d9cc163e7183c5ee7e2c90d07faaca"
     },
     "terms.html": {
       "bytes": 41286,
@@ -180,6 +180,10 @@
     "tests/test_client_keepalive.py": {
       "bytes": 6716,
       "sha256": "ff6d0eee822fed0de91460308d6a0f5a510bbe86399250e39eaafcd93fcf5952"
+    },
+    "tests/test_client_lifecycle_batch.py": {
+      "bytes": 9602,
+      "sha256": "7e96d80cbc74e3d05cc6be42af3af1d74ec56ee0dcf873c4cbadec08ab185844"
     },
     "tests/test_console_exit.py": {
       "bytes": 11119,
