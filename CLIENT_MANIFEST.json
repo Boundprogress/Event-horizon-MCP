@@ -54,8 +54,8 @@
       "sha256": "0c20d01eaba3c8b8ce6e11080637c3890731476387fdbaa2ba848c016e0bbe7d"
     },
     "client.py": {
-      "bytes": 62625,
-      "sha256": "53418df178bd8e3c20deb0c52ed4ee915f1bd90175df55f8461db268d7db87ee"
+      "bytes": 67794,
+      "sha256": "6141187524ff516306a98dbe242618fd15bf6e2febe9262c0305ab156fa3a835"
     },
     "connector.py": {
       "bytes": 63954,
@@ -172,6 +172,10 @@
     "tests/test_cleanup_lifecycle.py": {
       "bytes": 3784,
       "sha256": "e28bf6ea5eff8a5d9378388a8d67748b22b6b1a384d5e61e17ee59699094177d"
+    },
+    "tests/test_client_keepalive.py": {
+      "bytes": 6716,
+      "sha256": "ff6d0eee822fed0de91460308d6a0f5a510bbe86399250e39eaafcd93fcf5952"
     },
     "tests/test_console_exit.py": {
       "bytes": 11119,

@@ -14,16 +14,22 @@ from __future__ import annotations
 
 import argparse
 import ast
+import atexit
 import hashlib
+import http.client
 import json
 import math
 import os
 from pathlib import Path
 import re
+import select
+import socket
+import ssl
 import stat
 import sys
 import sysconfig
 import tempfile
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -163,6 +169,161 @@ def live_response(value):
     return {key: item for key, item in value.items() if key not in retired}
 
 
+_KEEPALIVE_MAX_IDLE = 45.0
+_KEEPALIVE_MAX_PER_ORIGIN = 2
+_REUSABLE_GET_ERRORS = (
+    http.client.RemoteDisconnected,
+    http.client.BadStatusLine,
+    ConnectionResetError,
+    BrokenPipeError,
+)
+
+
+def _connection_reusable(conn):
+    sock = getattr(conn, "sock", None)
+    if sock is None:
+        return False
+    try:
+        if sock.fileno() < 0:
+            return False
+        if hasattr(sock, "pending") and sock.pending() > 0:
+            return False
+        readable, _, errored = select.select([sock], [], [sock], 0)
+        return not readable and not errored
+    except (OSError, ValueError):
+        return False
+
+
+def _close_connection(conn):
+    if conn is not None:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+class _KeepAlivePool:
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._idle = {}
+        self._ssl_ctx = None
+
+    def _ssl_context(self):
+        with self._lock:
+            if self._ssl_ctx is None:
+                self._ssl_ctx = ssl.create_default_context()
+            return self._ssl_ctx
+
+    def acquire(self, scheme, host, port, timeout):
+        key = (scheme, host, port)
+        now = time.monotonic()
+        stale = []
+        chosen = None
+        with self._lock:
+            bucket = self._idle.get(key)
+            while bucket:
+                conn, used_at = bucket.pop()
+                if now - used_at > _KEEPALIVE_MAX_IDLE or not _connection_reusable(conn):
+                    stale.append(conn)
+                    continue
+                chosen = conn
+                break
+            if bucket is not None and not bucket:
+                self._idle.pop(key, None)
+        for conn in stale:
+            _close_connection(conn)
+        if chosen is not None:
+            try:
+                chosen.timeout = timeout
+                if chosen.sock is not None:
+                    chosen.sock.settimeout(timeout)
+                return chosen, True
+            except OSError:
+                _close_connection(chosen)
+        if scheme == "https":
+            conn = http.client.HTTPSConnection(host, port, timeout=timeout, context=self._ssl_context())
+        else:
+            conn = http.client.HTTPConnection(host, port, timeout=timeout)
+        conn.connect()
+        try:
+            if conn.sock is not None:
+                conn.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        except OSError:
+            pass
+        return conn, False
+
+    def release(self, scheme, host, port, conn):
+        if conn is None or not _connection_reusable(conn):
+            _close_connection(conn)
+            return
+        key = (scheme, host, port)
+        dropped = None
+        with self._lock:
+            bucket = self._idle.setdefault(key, [])
+            if len(bucket) >= _KEEPALIVE_MAX_PER_ORIGIN:
+                dropped, _ = bucket.pop(0)
+            bucket.append((conn, time.monotonic()))
+        _close_connection(dropped)
+
+    def close_all(self):
+        with self._lock:
+            buckets = list(self._idle.values())
+            self._idle.clear()
+        for bucket in buckets:
+            for conn, _ in bucket:
+                _close_connection(conn)
+
+
+_HTTP_POOL = _KeepAlivePool()
+atexit.register(_HTTP_POOL.close_all)
+
+
+def _request_keepalive(config, method, path, data, headers):
+    parsed = urllib.parse.urlsplit(config["endpoint"])
+    scheme = parsed.scheme
+    host = parsed.hostname
+    if scheme not in ("http", "https") or not host:
+        raise ClientError("invalid_endpoint")
+    port = parsed.port or (443 if scheme == "https" else 80)
+    target = parsed.path.rstrip("/") + path
+    req_headers = dict(headers)
+    req_headers["Connection"] = "keep-alive"
+    req_headers.setdefault("Accept-Encoding", "gzip")
+    if data is not None:
+        req_headers["Content-Length"] = str(len(data))
+    timeout = config["timeout"]
+    attempts = 2 if method == "GET" else 1
+    for attempt in range(attempts):
+        conn = None
+        reused = False
+        try:
+            conn, reused = _HTTP_POOL.acquire(scheme, host, port, timeout)
+            conn.request(method, target, body=data, headers=req_headers)
+            response = conn.getresponse()
+            status = response.status
+            value = read_response(response)
+            conn_hdr = (response.getheader("Connection") or "").lower()
+            can_keep = (
+                not response.will_close
+                and response.isclosed()
+                and conn_hdr != "close"
+                and not (300 <= status < 400)
+            )
+            if can_keep:
+                _HTTP_POOL.release(scheme, host, port, conn)
+            else:
+                _close_connection(conn)
+            return value, status
+        except _REUSABLE_GET_ERRORS:
+            _close_connection(conn)
+            if method == "GET" and reused and attempt == 0:
+                continue
+            raise
+        except Exception:
+            _close_connection(conn)
+            raise
+
+
 def request(config, method, path, body=None, *, opener=None):
     
     data = None if body is None else json.dumps(
@@ -170,18 +331,19 @@ def request(config, method, path, body=None, *, opener=None):
     headers = {"Authorization": "Bearer " + config["token"], "Accept": "application/json"}
     if data is not None:
         headers["Content-Type"] = "application/json"
-    req = urllib.request.Request(
-        config["endpoint"] + path, data=data, method=method, headers=headers)
-    opener = opener or urllib.request.build_opener(
-        urllib.request.ProxyHandler({}), NoRedirect())
     try:
-        try:
-            response = opener.open(req, timeout=config["timeout"])
-        except urllib.error.HTTPError as error:
-            response = error
-        with response:
-            status = response.getcode()
-            value = read_response(response)
+        if opener is None:
+            value, status = _request_keepalive(config, method, path, data, headers)
+        else:
+            req = urllib.request.Request(
+                config["endpoint"] + path, data=data, method=method, headers=headers)
+            try:
+                response = opener.open(req, timeout=config["timeout"])
+            except urllib.error.HTTPError as error:
+                response = error
+            with response:
+                status = response.getcode()
+                value = read_response(response)
         value = live_response(redact(value, config["token"]))
         return value, status
     except Exception as error:
