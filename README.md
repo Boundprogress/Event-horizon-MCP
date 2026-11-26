@@ -229,12 +229,15 @@ cd Event-horizon-MCP
 py -3 -I -S -B eh.py start
 ```
 
-### 2. Sign In & Connect Your Agent (100% Free)
+### 2. One-Time Sign In & Connect Your Agent (100% Free)
 
 1. The local console opens automatically in your browser (defaults to **English** on non-Chinese locales; switch anytime in the sidebar).
 2. **Sign in with one click using GitHub or Google** (no form or 6-digit verification code needed), or register with email &amp; password — access is **100% free** (no waitlist, no activation code, no credit card).
-3. Click **Prepare Local Setup** → **Connect Browser** to launch your isolated local Chrome.
-4. Click **Copy One-Line MCP Setup** and paste it into **Claude Code / Cursor / Codex / OpenCode** — or any ACP / shell-capable desktop agent. The generated connection package automatically adapts across three tiers (without ever exposing your API key):
+3. Click **Prepare Local Setup** (enrolls your API key &amp; device config into a local `0600` directory).
+4. Click **Copy One-Line MCP Setup** and paste it into **Claude Code / Cursor / Codex / OpenCode** — or any ACP / shell-capable desktop agent.
+5. **Zero-ritual daily use (On-Demand Auto-Connect)**: After this one-time setup, you do **not** need to run `eh.py start` or keep a terminal open each day. Whenever your MCP agent calls `eh_create_session` (or `eh_open`), the local MCP server detects if Chrome is offline and automatically launches your isolated visible Chrome window + TLS tunnel on demand (and shuts it down cleanly on exit or after 15 minutes of inactivity). Pass `--no-auto-connect` to `client.py mcp` to opt out, or `eh.py start --auto-connect` whenever you prefer opening the web console.
+
+The generated connection package automatically adapts across three tiers (without ever exposing your API key):
    - **Tier 1 (Native stdio MCP)**: `mcp-config.json` / Codex TOML (`eh_*` tools).
    - **Tier 2 (ACP `session/new` & Python SDK)**: `acp-mcp-servers.json` (standard Agent Client Protocol `mcpServers` array, or `python3 -I -S -B client.py mcp-config --console-directory <dir> --host acp`) and zero-dependency [`eh_sdk.py`](eh_sdk.py) (`EventHorizonClient.from_console()` / `.acp_mcp_servers()`).
    - **Tier 3 (Non-MCP Desktop Hosts with Shell Access)**: Bound credential-free CLI fallback (`python3 -I -S -B client.py tool --console-directory <dir> --name eh_status --args '{}'`) exposing all 17 tools and schemas identically.

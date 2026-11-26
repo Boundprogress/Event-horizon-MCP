@@ -76,6 +76,7 @@ def parser():
     start.add_argument("--directory", help="private data directory outside the source checkout")
     start.add_argument("--endpoint", help="API endpoint; defaults to the existing console default")
     start.add_argument("--no-open", action="store_true", help="start without opening a browser tab")
+    start.add_argument("--auto-connect", action="store_true", help="automatically connect Chrome on startup if already signed in and configured")
     start.add_argument("--chrome", help="task Chrome executable")
     start.add_argument("--headless", action="store_true", help="run the owned task Chrome headless")
     connect = commands.add_parser("agent-connect", help="prepare instructions to paste into your local Agent", allow_abbrev=False)
@@ -111,7 +112,7 @@ def main(argv=None):
                 value = getattr(args, flag)
                 if value is not None:
                     forwarded.extend(["--" + flag, value])
-            for flag in ("no_open", "headless"):
+            for flag in ("no_open", "headless", "auto_connect"):
                 if getattr(args, flag):
                     forwarded.append("--" + flag.replace("_", "-"))
         else:

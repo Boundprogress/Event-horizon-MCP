@@ -1306,6 +1306,7 @@ def main(argv=None):
     parser.add_argument('--directory',default=str(Path(os.environ['LOCALAPPDATA'])/'EH Client Data') if win else str(Path.home()/'.local/share/eh-subscription-console'))
     parser.add_argument('--endpoint',default=DEFAULT_ENDPOINT)
     parser.add_argument('--no-open',action='store_true',help='write private launch.json without opening the UI')
+    parser.add_argument('--auto-connect',action='store_true',help='automatically connect Chrome on startup if signed in and device is enrolled')
     parser.add_argument('--updater');parser.add_argument('--install-root');parser.add_argument('--update-notice')
     parser.add_argument('--chrome');parser.add_argument('--headless',action='store_true',help='start the owned task Chrome headless')
     args=parser.parse_args(argv);store=app=server=None;done=threading.Event();old={};exit_code=0
@@ -1324,6 +1325,14 @@ def main(argv=None):
         print(json.dumps({'status':'console_ready','origin':server.origin,'launch_file':str(store.root/'launch.json')}),flush=True)
         for sig in ((signal.SIGINT,signal.SIGTERM) if win else (signal.SIGINT,signal.SIGTERM,signal.SIGHUP)):old[sig]=signal.signal(sig,lambda *_:done.set())
         if not args.no_open:webbrowser.open(launch['url'])
+        if args.auto_connect:
+            with app.lock:
+                d = app.store.data
+                if d.get('login_file') and d.get('key_file') and d.get('device_file') and not d.get('pending'):
+                    try:
+                        app.dispatch('connect', {})
+                    except PanelError:
+                        pass
         while not done.is_set() and (not app.quit_requested or app.shutdown_reply_pending):server.handle_request()
     except PanelError as exc:print(json.dumps({'error':exc.code}));exit_code=2
     except Exception:print(json.dumps({'error':'console_failed'}));exit_code=2

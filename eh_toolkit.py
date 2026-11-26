@@ -254,6 +254,11 @@ class SimpleBridge:
         self.active_frame_id = None
         self.last_v2_prompt = ""
 
+    def close(self):
+        close_fn = getattr(self.inner, "close", None)
+        if callable(close_fn):
+            close_fn()
+
     @staticmethod
     def _new_rid(prefix):
         return f"{prefix}-{uuid.uuid4().hex[:12]}"
@@ -357,7 +362,12 @@ class SimpleBridge:
             if st_err:
                 return self._wrap({"ok": False, "error": "status_preflight_failed", "status_detail": st}, is_error=True)
             cr = st.get("connector_readiness") or {}
-            if not (cr.get("available") is True and cr.get("ready") is True):
+            client_info = st.get("client") if isinstance(st.get("client"), dict) else {}
+            can_auto_connect = (
+                cr.get("reason") == "connector_offline"
+                and client_info.get("auto_connect_ready") is True
+            )
+            if not (cr.get("available") is True and cr.get("ready") is True) and not can_auto_connect:
                 return self._wrap(
                     {
                         "ok": False,

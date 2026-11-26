@@ -1087,6 +1087,8 @@ def parser():
     mcp.add_argument("--expected-endpoint", help="endpoint paired with --expected-account")
     mcp.add_argument("--profile", choices=("full", "simple"), default="full",
                      help="MCP toolset profile: full (17 atomic tools) or simple (5 lean atomic tools)")
+    mcp.add_argument("--no-auto-connect", action="store_true",
+                     help="disable on-demand Chrome/connector auto-launch when browser is offline")
     export = sub.add_parser("mcp-config", parents=[common], help="Print credential-free MCP or ACP configuration")
     export.add_argument("--console-directory", required=True)
     export.add_argument("--host", choices=("generic", "codex", "acp"), default="generic")
@@ -1162,7 +1164,7 @@ def main(argv=None):
             return bridge.serve_mcp(config_path=getattr(args, "config", None),
                                     console_directory=args.console_directory, directory=args.directory,
                                     expected_account=args.expected_account, expected_endpoint=args.expected_endpoint,
-                                    profile=args.profile)
+                                    profile=args.profile, auto_connect=not getattr(args, "no_auto_connect", False))
         except (BrokenPipeError, KeyboardInterrupt):
             return 0
         except Exception:

@@ -30,7 +30,7 @@ Event Horizon compiles the **human-visible viewport** into compact IDs instead o
    - Tier 3 (desktop hosts without MCP UI): bound CLI `client.py tool --console-directory ... --name <tool> --args '<json>'`
    - Never ask the user to paste API keys, device tokens, or credentials into chat.
 2. **Always run `eh_status` and `eh_sessions` first**:
-   - Check `connector_readiness.available == true` and `ready == true` before creating a session.
+   - Check `connector_readiness.ready == true` before creating a session — or if `reason == "connector_offline"` and `client.auto_connect_ready == true`, call `eh_create_session` directly to auto-launch Chrome on demand.
    - Read `entry_policy` (`schema:2` / `public_except_sensitive` allows authorized public HTTP(S) URLs except sensitive/private networks).
    - If the user only asked to **check connection** ("检查 EH 接入"), report actual status/gaps and **stop without creating a session**.
 

@@ -209,8 +209,11 @@ py -3 -I -S -B eh.py start
 
 1. 启动后自动打开本机控制台（支持中英切换）。
 2. **使用 GitHub 或 Google 一键登录**（免填表、免 6 位邮箱验证码），也支持常规邮箱注册：完全免费，无需等待或激活码。
-3. 点击 **准备本机使用** → **连接浏览器** 启动专属隔离 Chrome。
-4. 点击 **复制一句话接入**，发给 **Claude Code / Cursor / Codex / OpenCode** 或任意支持 ACP / 本机命令行的桌面 Agent。生成的接入目录支持**三层自动适配**（全程不暴露明文 Key）：
+3. 点击 **准备本机使用**（在本机 `0600` 私有目录写入绑定凭据与设备配置）。
+4. 点击 **复制一句话接入**，发给 **Claude Code / Cursor / Codex / OpenCode** 或任意支持 ACP / 本机命令行的桌面 Agent。
+5. **日常零启动（MCP 按需自动拉起）**：完成上述**一次性**配置后，平时直接打开 Claude Code / Cursor 派发任务即可，**无需每次手动跑 `eh.py start` 或常驻终端**。当 Agent 调用 `eh_create_session`（或 `eh_open`）且检测到本机浏览器未连接时，MCP 会自动按需拉起可见的专属隔离 Chrome 与隧道，并在宿主退出或空闲 15 分钟后自动干净回收（如需关闭可加 `--no-auto-connect`；若习惯开网页控制台也可运行 `eh.py start --auto-connect` 启动即连）。
+
+生成的接入目录支持**三层自动适配**（全程不暴露明文 Key）：
    - **通道 1（标准 stdio MCP）**：`mcp-config.json` / Codex TOML（直接挂载 17 个 `eh_*` 工具）。
    - **通道 2（ACP `session/new` 与 Python SDK）**：同目录自带 `acp-mcp-servers.json`（标准 Agent Client Protocol 数组格式，也可通过 `client.py mcp-config --host acp` 导出）以及零依赖 Python SDK [`eh_sdk.py`](eh_sdk.py)（`EventHorizonClient.from_console()` / `.acp_mcp_servers()`）。
    - **通道 3（无 MCP 设置页但带终端工具的桌面宿主）**：自动降级到绑定账号的免明文 Key CLI 入口（`client.py tool --console-directory <dir> --name eh_status --args '{}'`），复用完全相同的 17 个工具与安全护栏。

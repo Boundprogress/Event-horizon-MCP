@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import atexit
 import base64
 import io
 import re
+import signal
+import subprocess
+import threading
 import zipfile
 import sys
 if sys.platform != "win32":
@@ -152,10 +156,15 @@ MAX_RPC_INPUT = 131072
 SERVER_INSTRUCTIONS = """EH controls only the user's dedicated connected browser.
 Use eh_status and eh_sessions before starting. API health alone does not prove
 browser connectivity. Require connector_readiness.available=true and ready=true
-before creating a task; absent/invalid/not_configured readiness is unknown, not
+before creating a task — EXCEPT when client.auto_connect_ready=true and
+connector_readiness.reason="connector_offline": in that case calling
+eh_create_session automatically launches the user's local isolated Chrome and
+connects the tunnel on demand, so proceed directly without asking the user to
+open the console. Absent/invalid/not_configured readiness is unknown, not
 permission to probe by creating sessions. If the connector goes offline or its
-epoch changes, stop new tasks, query original request IDs only when needed, and
-ask the user to reconnect; never reconnect or replay uncertain actions yourself.
+epoch changes mid-session (or auto-connect fails), stop new tasks, query
+original request IDs only when needed, and ask the user to reconnect; never
+replay uncertain actions yourself.
 Read the actual
 subscription_quota metering, unit, limit, used, reserved and remaining; do not
 infer an allowance from a product label or treat missing/invalid data as 3000.
@@ -1020,6 +1029,9 @@ def _agent_client_catalog(value):
         if isinstance(items, list) and all(
                 isinstance(item, str) and re.fullmatch(r"[a-z_]{1,40}", item) for item in items):
             out[key] = list(items)
+    for key in ("auto_connect", "auto_connect_ready", "auto_connect_running"):
+        if type(value.get(key)) is bool:
+            out[key] = value[key]
     return out
 
 
@@ -1122,10 +1134,178 @@ def _known_arm_handoff(body):
     return True
 
 
+def _browser_directory_for_console(console_directory, state):
+    """Compute the exact same isolated browser profile directory hash as panel.py."""
+    from urllib.parse import urlsplit
+    account = str(state["account"]).strip()
+    parsed = urlsplit(str(state["endpoint"]))
+    host = parsed.hostname.encode("idna").decode("ascii").lower()
+    origin = [
+        parsed.scheme.lower(),
+        host,
+        parsed.port if parsed.port is not None else (443 if parsed.scheme == "https" else 80),
+    ]
+    namespace = json.dumps(
+        ["eh-browser-account-v1", origin, account],
+        ensure_ascii=True,
+        separators=(",", ":"),
+    ).encode("ascii")
+    return Path(console_directory) / ("browser-account-" + hashlib.sha256(namespace).hexdigest())
+
+
+class OnDemandConnector:
+    """Manages an on-demand `setup.py run` child process (visible isolated Chrome + TLS tunnel)
+    for long-lived MCP / SDK sessions, with clean shutdown on exit or idle timeout.
+    """
+
+    def __init__(self, *, here=None, connect_timeout=25.0):
+        self.here = Path(here) if here is not None else Path(__file__).resolve().parent
+        self.connect_timeout = float(connect_timeout)
+        self._lock = threading.Lock()
+        self._proc = None
+        self._thread = None
+        self._event = threading.Event()
+        self._status = "stopped"
+        self._first_error = None
+
+    def is_running(self):
+        with self._lock:
+            return self._proc is not None and self._proc.poll() is None
+
+    def is_connected(self):
+        with self._lock:
+            return self._proc is not None and self._proc.poll() is None and self._status == "connected"
+
+    def _read_stdout(self, proc):
+        try:
+            with proc.stdout as stream:
+                while True:
+                    line = stream.readline(65537)
+                    if not line:
+                        break
+                    if len(line) > 65536:
+                        while line and not line.endswith(b"\n"):
+                            line = stream.readline(65537)
+                        continue
+                    try:
+                        payload = json.loads(line.decode("utf-8", errors="replace"))
+                    except Exception:
+                        continue
+                    if not isinstance(payload, dict):
+                        continue
+                    st = payload.get("status")
+                    fe = payload.get("first_error")
+                    err = payload.get("error")
+                    with self._lock:
+                        if self._proc is not proc:
+                            return
+                        if isinstance(fe, dict) and isinstance(fe.get("reason"), str):
+                            self._first_error = fe["reason"]
+                        elif isinstance(err, str) and not self._first_error:
+                            self._first_error = err
+                        if st in ("starting", "connected", "stopped", "failed"):
+                            self._status = st
+                            if st in ("connected", "stopped", "failed"):
+                                self._event.set()
+        finally:
+            with self._lock:
+                if self._proc is proc:
+                    if self._status == "starting":
+                        self._status = "failed"
+                    self._event.set()
+
+    def start(self, api_path, device_path, browser_dir, *, chrome=None, headless=False):
+        with self._lock:
+            if self._proc is not None and self._proc.poll() is None:
+                if self._status == "connected":
+                    return {"connected": True, "reused": True}
+            else:
+                self._proc = None
+                self._status = "starting"
+                self._first_error = None
+                self._event.clear()
+                args = [
+                    sys.executable, "-I", "-S", "-B", str(self.here / "setup.py"), "run",
+                    "--api-config", str(api_path),
+                    "--device-config", str(device_path),
+                    "--directory", str(browser_dir),
+                    "--reuse-profile",
+                ]
+                if chrome:
+                    args += ["--chrome", str(chrome)]
+                if headless:
+                    args += ["--headless"]
+                env = dict(os.environ, EH_STOP_STDIN="1") if win else None
+                self._proc = subprocess.Popen(
+                    args,
+                    stdin=subprocess.PIPE if win else subprocess.DEVNULL,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    env=env,
+                )
+                proc = self._proc
+                self._thread = threading.Thread(
+                    target=self._read_stdout,
+                    args=(proc,),
+                    name="eh-mcp-ondemand-connector",
+                    daemon=True,
+                )
+                self._thread.start()
+
+        self._event.wait(timeout=self.connect_timeout)
+        with self._lock:
+            proc = self._proc
+            alive = proc is not None and proc.poll() is None
+            st = self._status
+            reason = self._first_error
+        if alive and st == "connected":
+            return {"connected": True, "reused": False}
+        self.stop()
+        return {"connected": False, "reason": reason or ("connect_timeout" if alive else "connector_exited")}
+
+    def stop(self):
+        with self._lock:
+            proc = self._proc
+            thread = self._thread
+            self._proc = None
+            self._thread = None
+            self._status = "stopped"
+            self._event.set()
+        if proc is None:
+            return
+        try:
+            if proc.poll() is None:
+                if win:
+                    try:
+                        if proc.stdin:
+                            proc.stdin.write(b"stop\n")
+                            proc.stdin.flush()
+                            proc.stdin.close()
+                    except (OSError, ValueError):
+                        pass
+                else:
+                    try:
+                        proc.send_signal(signal.SIGTERM)
+                    except OSError:
+                        pass
+            try:
+                proc.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                try:
+                    proc.kill()
+                    proc.wait(timeout=5)
+                except OSError:
+                    pass
+        finally:
+            if thread is not None and thread.is_alive():
+                thread.join(timeout=1.0)
+
+
 class AgentBridge:
     
     def __init__(self, *, config_path=None, console_directory=None, directory=None, api=None,
-                 clock=None, sleep=None, wait_for_result=None, expected_account=None, expected_endpoint=None):
+                 clock=None, sleep=None, wait_for_result=None, expected_account=None, expected_endpoint=None,
+                 auto_connect=False, idle_timeout=900.0, connect_timeout=25.0, connector_factory=None):
         if bool(config_path) == bool(console_directory):
             raise AgentError("choose_config_or_console_directory")
         if config_path and not directory:
@@ -1146,6 +1326,132 @@ class AgentBridge:
             raise AgentError("account_binding_invalid")
         self.expected_account, self.expected_endpoint = expected_account, expected_endpoint
         self.tools = {v["name"]: v for v in tool_definitions()}
+        self.auto_connect = bool(auto_connect and self.console_directory)
+        self.idle_timeout = float(idle_timeout) if idle_timeout is not None else 0.0
+        self.connect_timeout = float(connect_timeout)
+        self._connector_factory = connector_factory or (lambda: OnDemandConnector(connect_timeout=self.connect_timeout))
+        self._connector = None
+        self._connector_lock = threading.Lock()
+        self._last_activity = self.clock()
+        self._closed = threading.Event()
+        self._idle_thread = None
+
+    def _auto_connect_state(self):
+        """Inspect local console_directory to see whether on-demand browser auto-connect can run."""
+        if not self.auto_connect or not self.console_directory:
+            return False, "auto_connect_disabled"
+        try:
+            state = self.setup.secure_json(self.console_directory / "console.json")
+        except Exception:
+            return False, "sign_in_in_eh_client"
+        if state.get("schema") != 1 or not state.get("login_file") or not state.get("account") or not state.get("endpoint"):
+            return False, "sign_in_in_eh_client"
+        key_name = state.get("key_file")
+        dev_name = state.get("device_file")
+        if not isinstance(key_name, str) or not re.fullmatch(r"credential-[a-f0-9]{32}\.json", key_name):
+            return False, "create_key_in_eh_client"
+        if not isinstance(dev_name, str) or not re.fullmatch(r"credential-[a-f0-9]{32}\.json", dev_name):
+            return False, "enroll_device_in_eh_client"
+        if state.get("pending"):
+            return False, "review_pending_operation_in_eh_client"
+        prev_conn = state.get("connection")
+        if isinstance(prev_conn, dict) and prev_conn.get("clean") is False and prev_conn.get("running") is not True:
+            return False, "review_connection_in_eh_client"
+        api_path = self.console_directory / key_name
+        device_path = self.console_directory / dev_name
+        if not api_path.is_file() or not device_path.is_file():
+            return False, "enroll_device_in_eh_client"
+        try:
+            browser_dir = _browser_directory_for_console(self.console_directory, state)
+        except Exception:
+            return False, "invalid_console_endpoint"
+        return True, {"api_path": api_path, "device_path": device_path, "browser_dir": browser_dir}
+
+    def _ensure_idle_watchdog(self):
+        if self.idle_timeout <= 0 or self._idle_thread is not None:
+            return
+        def _watch():
+            poll_step = min(1.0, max(0.05, self.idle_timeout / 4.0))
+            while not self._closed.wait(poll_step):
+                with self._connector_lock:
+                    conn = self._connector
+                    idle_for = self.clock() - self._last_activity
+                if conn is not None and conn.is_running() and idle_for >= self.idle_timeout:
+                    with self._connector_lock:
+                        if self._connector is conn and (self.clock() - self._last_activity) >= self.idle_timeout:
+                            conn.stop()
+        self._idle_thread = threading.Thread(target=_watch, name="eh-mcp-idle-watchdog", daemon=True)
+        self._idle_thread.start()
+
+    def _probe_connector_ready(self, config):
+        probe_cfg = dict(config, timeout=min(config["timeout"], 8.0))
+        reply, status = self.api.request(probe_cfg, "GET", "/health")
+        if status != 200 or not isinstance(reply, dict):
+            return None
+        return connector_readiness(reply.get("connector_readiness"))
+
+    def ensure_browser_connected(self, config):
+        """Ensure a local isolated Chrome + connector tunnel is online before opening a session.
+
+        - If an external connector (e.g. `eh.py start` console or sibling MCP host) is already ready, reuses it.
+        - If offline and local credentials + device config are ready, spawns `setup.py run --reuse-profile`
+          on demand and waits for the tunnel to report ready.
+        """
+        self._last_activity = self.clock()
+        if not self.auto_connect or not self.console_directory:
+            return None
+        with self._connector_lock:
+            if self._connector is not None and self._connector.is_connected():
+                return {"mode": "reused_owned"}
+        cr = self._probe_connector_ready(config)
+        if cr is None:
+            return None
+        if cr.get("available") is True and cr.get("ready") is True:
+            return {"mode": "reused_external"}
+        if cr.get("reason") != "connector_offline":
+            return None
+
+        ready, info = self._auto_connect_state()
+        if not ready:
+            raise AgentError(info)
+
+        with self._connector_lock:
+            if self._connector is None:
+                self._connector = self._connector_factory()
+            conn = self._connector
+
+        outcome = conn.start(info["api_path"], info["device_path"], info["browser_dir"])
+        if outcome.get("connected"):
+            self._last_activity = self.clock()
+            self._ensure_idle_watchdog()
+            # Brief poll so the cloud hub registers the freshly connected device before POST /session.
+            deadline = self.clock() + 4.0
+            while self.clock() < deadline:
+                cr2 = self._probe_connector_ready(config)
+                if cr2 and cr2.get("available") is True and cr2.get("ready") is True:
+                    return {"mode": "started_on_demand"}
+                self.sleep(0.25)
+            return {"mode": "started_on_demand"}
+
+        reason = str(outcome.get("reason") or "startup_failed")
+        if reason in ("profile_in_use", "profile_in_use_or_unsafe_lock"):
+            # A sibling MCP host or local console likely just grabbed the profile; verify readiness once.
+            deadline = self.clock() + 4.0
+            while self.clock() < deadline:
+                cr2 = self._probe_connector_ready(config)
+                if cr2 and cr2.get("available") is True and cr2.get("ready") is True:
+                    return {"mode": "reused_concurrent"}
+                self.sleep(0.25)
+        raise AgentError("auto_connect_failed:" + reason)
+
+    def close(self):
+        """Stop any on-demand browser/connector owned by this bridge cleanly."""
+        self._closed.set()
+        with self._connector_lock:
+            conn = self._connector
+            self._connector = None
+        if conn is not None:
+            conn.stop()
 
     def config(self):
         import re
@@ -1219,6 +1525,7 @@ class AgentBridge:
 
     def call(self, name, arguments):
         started = self.clock()
+        self._last_activity = started
         if name not in self.tools:
             raise AgentError("unknown_tool")
         if name == "eh_terminal" and isinstance(arguments, dict):
@@ -1307,6 +1614,7 @@ class AgentBridge:
                 raise AgentError("invalid_start_url")
             if not args["objective"].strip():
                 raise AgentError("empty_objective")
+            self.ensure_browser_connected(config)
             identity = {"create_request_id": args["request_id"]}
             reply, status, replay = self._submit(config, "create", args["request_id"],
                 "POST", "/session", args, "/session?" + urlencode({"request_id": args["request_id"]}))
@@ -1383,9 +1691,16 @@ class AgentBridge:
         if name in {"eh_status","eh_capabilities"}:
             body["capabilities"] = advanced_capabilities(body if name=="eh_capabilities" else body.get("capabilities")) if status==200 else {"available":False,"reason":"request_failed"}
         if name == "eh_status":
-
-            body["client"] = {"tools": sorted(self.tools),
-                              "act_kinds": sorted(sibling("client").ACT_KINDS)}
+            ac_ready, _ac_info = self._auto_connect_state()
+            with self._connector_lock:
+                ac_running = bool(self._connector is not None and self._connector.is_running())
+            body["client"] = {
+                "tools": sorted(self.tools),
+                "act_kinds": sorted(sibling("client").ACT_KINDS),
+                "auto_connect": bool(self.auto_connect),
+                "auto_connect_ready": bool(ac_ready),
+                "auto_connect_running": ac_running,
+            }
         quota_response_ok = status is not None and 200 <= status < 300
         if name in ("eh_status", "eh_create_session", "eh_session") or "subscription_quota" in body:
             body["subscription_quota"] = (subscription_quota(body.get("subscription_quota"))
@@ -1563,32 +1878,38 @@ class MCPServer:
 
 
 def serve_mcp(*, config_path=None, console_directory=None, directory=None, stdin=None, stdout=None,
-              expected_account=None, expected_endpoint=None, profile="full"):
+              expected_account=None, expected_endpoint=None, profile="full",
+              auto_connect=True, idle_timeout=900.0):
     reader = stdin or sys.stdin.buffer
     writer = stdout or sys.stdout.buffer
     bridge = AgentBridge(config_path=config_path, console_directory=console_directory,
-                         directory=directory, expected_account=expected_account, expected_endpoint=expected_endpoint)
+                         directory=directory, expected_account=expected_account, expected_endpoint=expected_endpoint,
+                         auto_connect=bool(auto_connect and console_directory), idle_timeout=idle_timeout)
     if profile == "simple":
         bridge = sibling("eh_toolkit").SimpleBridge(bridge)
     server = MCPServer(bridge)
-    while True:
-        raw = reader.readline(MAX_RPC_INPUT + 1)
-        if not raw:
-            return 0
-        if len(raw) > MAX_RPC_INPUT:
+    atexit.register(bridge.close)
+    try:
+        while True:
+            raw = reader.readline(MAX_RPC_INPUT + 1)
+            if not raw:
+                return 0
+            if len(raw) > MAX_RPC_INPUT:
 
-            response = server.error(None, -32700, "Message size limit")
-            writer.write((json.dumps(response) + "\n").encode()); writer.flush()
-            return 2
-        try:
-            request = _rpc_parse(raw)
-        except (ValueError, UnicodeDecodeError, RecursionError):
-            response = server.error(None, -32700, "Parse error")
-        else:
-            response = server.dispatch(request)
-        if response is not None:
-            writer.write((json.dumps(response, ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8"))
-            writer.flush()
+                response = server.error(None, -32700, "Message size limit")
+                writer.write((json.dumps(response) + "\n").encode()); writer.flush()
+                return 2
+            try:
+                request = _rpc_parse(raw)
+            except (ValueError, UnicodeDecodeError, RecursionError):
+                response = server.error(None, -32700, "Parse error")
+            else:
+                response = server.dispatch(request)
+            if response is not None:
+                writer.write((json.dumps(response, ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8"))
+                writer.flush()
+    finally:
+        bridge.close()
 
 
 

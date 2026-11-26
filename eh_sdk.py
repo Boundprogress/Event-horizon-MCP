@@ -224,6 +224,8 @@ class EventHorizonClient:
         directory=None,
         expected_account=None,
         expected_endpoint=None,
+        auto_connect=False,
+        idle_timeout=900.0,
         bridge=None,
     ):
         self._agent = _load_sibling("example_agent")
@@ -238,10 +240,13 @@ class EventHorizonClient:
             directory=self.directory,
             expected_account=self.expected_account,
             expected_endpoint=self.expected_endpoint,
+            auto_connect=auto_connect,
+            idle_timeout=idle_timeout,
         )
 
     @classmethod
-    def from_console(cls, console_directory=None, *, expected_account=None, expected_endpoint=None):
+    def from_console(cls, console_directory=None, *, expected_account=None, expected_endpoint=None,
+                     auto_connect=False, idle_timeout=900.0):
         """Attach to the signed-in local EH console data directory without reading plaintext keys."""
         if console_directory is None:
             eh_mod = _load_sibling("eh")
@@ -250,6 +255,8 @@ class EventHorizonClient:
             console_directory=console_directory,
             expected_account=expected_account,
             expected_endpoint=expected_endpoint,
+            auto_connect=auto_connect,
+            idle_timeout=idle_timeout,
         )
 
     @classmethod
@@ -257,10 +264,17 @@ class EventHorizonClient:
         """Attach using an explicit private API config file and submission journal directory."""
         return cls(config_path=config_path, directory=directory)
 
+    def close(self):
+        """Stop any on-demand browser/connector owned by this client."""
+        close_fn = getattr(self._bridge, "close", None)
+        if callable(close_fn):
+            close_fn()
+
     def __enter__(self):
         return self
 
     def __exit__(self, _exc_type, _exc, _tb):
+        self.close()
         return False
 
     def tools(self):
