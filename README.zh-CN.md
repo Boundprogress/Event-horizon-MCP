@@ -4,9 +4,9 @@
 
 ### 面向 AI Browser Agent 的人类物理可见现实层
 
-**基于 MCP 的视口契约编译引擎 —— Token 暴降 91.9%、遮挡误点归零、0 条站点规则。**
+**基于 MCP 的视口契约编译引擎 —— 8 大高难前端技术栈压减 95%+ 上下文体积、遮挡误点归零、0 条站点规则。**
 
-[English](README.md) · [中文](README.zh-CN.md) · [官网](https://ehbrowser.com/) · [更新日志](CHANGELOG.md) · [60 秒免费上手](#60-秒快速上手完全免费--注册即用) · [实测对比](#实测证据视口契约编译-vs-裸-dom--纯视觉) · [为何云端托管与免费](#为什么感知核心放在云端)
+[English](README.md) · [中文](README.zh-CN.md) · [8 栈在线竞技场（免登录）](https://ehbrowser.com/playground/) · [官网](https://ehbrowser.com/) · [更新日志](CHANGELOG.md) · [60 秒免费上手](#60-秒快速上手完全免费--注册即用) · [为何云端托管与免费](#为什么感知核心放在云端)
 
 </div>
 
@@ -43,76 +43,80 @@
 
 | 维度 | 路线一：裸 DOM / 无障碍树<br>*(Playwright MCP 等)* | 路线二：纯视觉 / 截屏猜点<br>*(Computer Use / 视觉 BU)* | **路线三：视口契约编译层**<br>***Event Horizon*** |
 | :--- | :--- | :--- | :--- |
-| **模型看到什么** | 完整隐藏/屏外文档树（`200k+ tok`） | 高开销 PNG 截图（猜像素坐标） | **紧凑物理可见视口契约（`16.3k tok`）** |
-| **弹窗遮挡控件** | 误报为可点（`85 / 90` 漏出） | 靠视觉硬猜、易误点 | **推理前直接剥离（`0 / 90` 漏出）** |
-| **Shadow DOM 与 div 汤** | 选择器脆弱、文档树爆炸 | 丢失结构与微小单元格 | **零规则穿透 546 个 Shadow Root** |
-| **实时缩窗与页面缩放** | 引用失效、坐标漂移 | 坐标瞬间打偏 | **每步按最新视口重编译 · 0 失误** |
-| **隐藏行内编辑器** | 无 `<input>` 直接卡死 | 双击坐标极不稳定 | **自动识别可试编辑并验真落盘** |
-| **高危/不可逆操作** | 仅靠 Prompt 祈祷 | 仅靠 Prompt 祈祷 | **代码强制执行 · 触碰 DOM 前硬拦截** |
+| **模型看到什么** | 完整隐藏/屏外文档树（单屏 `112k–235k 字符`） | 高开销 PNG 截图（猜像素坐标） | **紧凑物理可见视口契约（`1.0k–5.2k 字符` · `-95.3% 至 -99.1%`）** |
+| **弹窗遮挡控件** | 隔着蒙层照常暴露为可点 | 靠视觉硬猜、易误点 | **推理前物理剥离（`0` 遮挡漏出）** |
+| **Shadow DOM、跨域 iframe 与 Portal** | 同源策略阻断 / 选择器脆弱 / 树体膨胀 | 丢失结构与微小控件 | **55 层 ShadowRoot + 跨域 OOPIF + Body Portal 统一编入 · 0 规则** |
+| **虚拟滚动列表（DOM 回收）** | 未挂载行缺失、滚过即销毁 | 每滚一步重传大图 | **内部虚拟滚轮 + 跨滚动证据 `E*` 冻结，DOM 回收后不丢事实** |
+| **Canvas2D 与 `opacity:0` 透明壳** | 透明按钮壳失灵或放宽遮挡闸 | 持续上传高开销截图 | **诚实画布几何真值（0 截图上传）+ 精准绑定透明原生壳** |
+| **高危/不可逆操作** | 仅靠 Prompt 祈祷 | 仅靠 Prompt 祈祷 | **代码强制执行 · 触碰 DOM 前硬拦截（`dom_touched: false`）** |
 | **浏览器、IP 与隐私** | 云端托管易封 IP 或重依赖 | 页面截图持续上传云端 VLM | **你的本机 Chrome · 不传截图 · 零内容留存** |
 
 ---
 
-## 实测证据：视口契约编译 vs. 裸 DOM & 视觉路线
+## 实测证据：8 技术栈前端竞技场（100% 自托管 · 可 F12 核验）
 
-### 1. 上下文暴降 91.9%、遮挡误报归零（同一 2K 视口三方实测）
+不挑外部商业站凑演示——下方全部录屏与实测数据均直采自 **100% 自托管、零第三方商标的 [8 栈前端竞技场](https://ehbrowser.com/playground/)**（[源实验页](https://ehbrowser.com/playground/lab/)）。在浏览器打开按 **F12**，即可亲手核验每一个 DOM 陷阱、ShadowRoot、跨域 `<iframe>`、虚拟滚动行与返回的完整视口契约。
 
-在完全相同的 2K 视口（`2560×1440`）下，使用同一个 `deepseek-flash`（`temp=0`）对 5 类公认最难公开网页进行同页实测：
+### 1. 八大高难前端技术栈 → 统一编译为同一张视口契约
 
 <p align="center">
-  <img src="assets/gifs/01_token_occlusion_showdown.gif" alt="Event Horizon vs Playwright MCP vs Browser Use 2K 三方实测" width="920" />
+  <img src="assets/gifs/01_arena_unified_8stacks.gif" alt="Event Horizon 八大前端技术栈统一编译为同一视口契约" width="920" />
 </p>
 
-| 公认高难公开网页 | Playwright MCP | Browser Use 1.0.6 | **Event Horizon** |
-| :--- | :---: | :---: | :---: |
-| **1. 苹果 SEC 10-K 财报长表** | `93,169 tok` · PASS | `45,365*` · **FAIL（截断漏表）** | **`3,538 tok`（缩小 26×）· PASS** |
-| **2. Wikipedia 多层表头长表** | `38,874 tok` · PASS | `11,788 tok` · PASS | **`3,828 tok` · PASS** |
-| **3. Bootstrap 5.3 实时弹窗（遮挡 90 控件）** | `16,880 tok` · **85 处漏出** | `8,999 tok` · **82 处漏出** | **`375 tok` · 0 处漏出** |
-| **4. 联合国 240 行长列表** | `49,588 tok` · 无折叠 | `14,793 tok` · 无折叠 | **`4,989 tok` · PASS** |
-| **5. arXiv 多条件表单** | `2,314 tok` · PASS | `1,383 tok` · PASS | **`3,606 tok` · PASS** |
-| **5 页总上下文 / 实测交付** | **`200,825 tok` · 3/5** | **`82,328 tok` · 2/5** | **`16,336 tok` (-91.9%) · 4/5*** |
+| 自托管竞技场技术栈（`1440×900` · 可按 F12 核对） | Raw DOM HTML | 完整 AXTree | **Event Horizon 视口契约与实测操作** |
+| :--- | :---: | :---: | :--- |
+| **1. 混淆 Div-Soup 商品列表** *(含 180 隐藏噪声节点)* | `112,040 ch` | `235,649 ch` | **`4,802 → 3,168 ch`**（`-95.7% / -98.0%`）· 增量滚动 + `E0` ✓ |
+| **2. 弹窗物理遮挡陷阱** *(`z-index: 1200` 全屏蒙层)* | `112,034 ch` | `120,910 ch` | **`1,021 ch`**（`-99.1% / -99.2%`）· **0 泄漏** → 解锁 CSV ✓ |
+| **3. 55 层嵌套开放 Shadow DOM** *(0 轻 DOM SKU)* | `112,031 ch` | `225,045 ch` | **`5,229 ch`**（`-95.3% / -97.7%`）· 实点 `N70` → `Selected ✓` |
+| **4. ARIA Combobox + DataGrid + 敏感操作边界** | `112,040 ch` | `124,585 ch` | **`3,939 ch`**（`-96.5% / -96.8%`）· 登录与密码 **碰 DOM 前拦截** ✓ |
+| **5. 跨域跨进程 OOPIF `<iframe>`** *(`ehbrowser.com → pages.dev`)* | `112,038 ch` | `98,006 ch` | **`3,603 ch`**（`-96.8% / -96.3%`）· 跨帧填 `N9~2` + 提交 `N15` ✓ |
+| **6. 500 行 DOM 回收虚拟滚动长表** *(仅挂载 12 行)* | `112,040 ch` | `184,232 ch` | **`4,237 → 3,820 ch`**（`-96.2% / -97.7%`）· `E0` 跨回收保留 ✓ |
+| **7. body 挂载游离 Portal 日历 + `opacity:0` 原生壳** | `112,045 ch` | `119,112 ch` | **`2,902 ch`**（`-97.4% / -97.6%`）· 选 12/18 + 透明按钮确认 ✓ |
+| **8. HTML5 Canvas2D 图表 + 响应式多选控制板** | `112,041 ch` | `98,054 ch` | **`3,219 ch`**（`-97.1% / -96.7%`）· 诚实画布 + W47 重绘 ✓ |
 
-> *实测口径说明：上述数据来自固定 2K 视口与 `deepseek-flash` 在指定 5 个公开页面上的对照实测，用于展示架构差异，不代表所有网站的通用压缩比或必然成功率。*
+> *100% 真实引擎在 `1440×900` 视口实采，零站点规则、零截图上传、零 `<html>` 游离冗余。欢迎免登录直达 [ehbrowser.com/playground/](https://ehbrowser.com/playground/) 逐帧检视全部 8 份完整契约。*
 
 ---
 
-### 2. 六层自主深潜总账单不到 1 美分（`$0.0093` · 零跑偏）
+### 2. 弹窗物理遮挡隔离（`0` 泄漏）+ 55 层开放 Shadow DOM 穿透实点
 
-`deepseek-flash` 自主连续钻取 6 层网页（`Wikipedia 首页 → Python → Guido van Rossum → 阿姆斯特丹大学 → 阿姆斯特丹 → 荷兰`）。全程 **9 次真实 API 调用**，每步上下文平稳维持在 **~3,800 Token** 不滚雪球（总计 `34,581 tok`），5/5 跨层事实全部绑定验真，总花费仅 **`$0.0093`（¥0.066）**。
-
-<p align="center">
-  <img src="assets/gifs/02_6layer_deep_dive_1cent.gif" alt="DeepSeek Flash 六层自主深潜不到 1 美分" width="920" />
-</p>
-
----
-
-### 3. 零站点规则穿透 546 个 Shadow DOM
-
-在纯 Web Components 站点 `shoelace.style` 上，无需任何站点规则或选择器，直穿 **546 个开放 `#shadow-root`** —— 点开影子搜索框捕获浮层 `O0`、键入 `Dialog` 跳转 `<sl-dialog>` 并实时切换影子 `React` 选项卡。
+- **第一幕（弹窗遮挡）**：`z-index: 1200` 币种弹窗盖住底层 `Export Ledger CSV` 按钮，EH 仅输出 `1,021` 字符前景契约（`-99.1%`），底层按钮 0 泄漏；点击 `Keep USD Settings` 后即刻解锁 `N46`。
+- **第二幕（55 层 Shadow DOM）**：55 个嵌套开放 `#shadow-root` 下共有 `0` 个轻 DOM SKU 节点，EH 零规则穿透并实点 `Inspect SKU`（`N70`）→ 验真 **`Selected ✓`**。
 
 <p align="center">
-  <img src="assets/gifs/03_shadow_dom_546_pierced.gif" alt="零规则穿透 546 个 Shadow DOM" width="920" />
+  <img src="assets/gifs/02_modal_shadow_pierce.gif" alt="弹窗物理遮挡隔离与 55 层开放 Shadow DOM 穿透实点" width="920" />
 </p>
 
 ---
 
-### 4. React 混淆类 `div` 汤 + 运行中实时缩窗变倍抗干扰
+### 3. 跨域跨进程 OOPIF `<iframe>` 统一编入、填表与双端验真
 
-在 Material UI 复杂表格（`457` 个 `<div>`、`1,503` 个混淆 `css-*` 类名）上，运行中途把真实 Chrome 窗口从全屏连续缩窄并缩放页面（`1470px → 1060px → 880px @ 115% → 1260px @ 85% → 1470px`），触发多轮响应式重排。EH 每步按最新视口重编译契约，依次勾选 `Cupcake`、`Eclair`、`Frozen yoghurt`、排序 `Calories` 并验真 **`3 selected`**，全程零失误。
+常规 DOM 脚本在跨域 `<iframe>` 前会撞上浏览器同源策略硬墙（`SecurityError`）。Event Horizon 将顶页订单（`ehbrowser.com`）与跨域跨进程子帧（`ehbrowser-site.pages.dev`）编入同一视口契约，通过跨帧消歧短号 **`N9~2`** 精准填入 **`MAN8841`**（顶页搜索框纹丝不动），再点 **`N15`** 签发标签，子帧与顶页 `postMessage` 双端同步验真 **`Label Issued · MAN8841 · Standard Ground ✓`**。
 
 <p align="center">
-  <img src="assets/gifs/04_live_resize_zoom_mui.gif" alt="MUI 表格实时缩窗与缩放抗干扰" width="920" />
+  <img src="assets/gifs/03_cross_origin_oopif_iframe.gif" alt="跨域跨进程 OOPIF iframe 统一编入与双端验真" width="920" />
 </p>
 
 ---
 
-### 5. 类 Excel 行内编辑 + 触碰 DOM 前的硬安全闸
+### 4. 500 行 DOM 回收虚拟滚动（`E0` 冻结）+ Body 游离 Portal 日历与 `opacity:0` 透明壳
 
-- **Tabulator 6.x 行内编辑**：双击前 DOM 中并无 `<input>`，EH 自动标出可试编辑单元格，完成 `Oli Bob → Ada Lovelace` 与 `Progress 12 → 95` 并于下一帧验真落盘。
-- **引擎层硬安全闸**：在 Wikipedia 登录页，密码框填值与点击 `Log in` 均在**触碰 DOM 前由代码强制拦截**，不受提示词注入影响。
+- **第一幕（虚拟滚动 DOM 回收）**：500 条库存记录同一时刻 DOM 仅挂载 12 行。EH 在滚动内部虚拟容器（`#001–#012` → `#007–#018`）销毁第 2 行之前，先把 `VSKU-002` 冻结为跨滚动审计证据 **`E0`**，滚动后增量契约依然完整保留 `E0`。
+- **第二幕（Body Portal + `opacity:0` 原生按钮壳）**：点开挂在 `document.body` 末尾（脱离表单子树）的日历 Portal 选中 **12/18（`2026-12-18`）**，再精准命中 `opacity:0` 原生确认按钮壳 → 验真 **`Schedule Confirmed ✓`**。
 
 <p align="center">
-  <img src="assets/gifs/05_inline_edit_and_safety_gate.gif" alt="Tabulator 行内编辑与硬安全闸拦截" width="920" />
+  <img src="assets/gifs/04_virtual_list_and_portal_opacity0.gif" alt="500 行虚拟滚动 E0 冻结与 body 挂载日历 Portal" width="920" />
+</p>
+
+---
+
+### 5. 诚实 HTML5 Canvas2D 真值（不传截图）+ 触碰 DOM 前硬安全闸
+
+- **第一幕（Canvas2D）**：不上传高开销截图、也不臆测柱状图像素，而是诚实标注画布单元几何与右侧多选区域控件；点击 `Highlight Peak Week`（`N59`）实时将峰值周 **W47** 重绘琥珀高亮，契约同步验真 **`Highlight: On ✓`**。
+- **第二幕（碰 DOM 前硬安全闸）**：点击 `Sign in`（`N70`）与向 `type="password"`（`N64`）输入凭据均在**触碰 DOM 前由确定性代码强制拦截**（`ok: false`、`dom_touched: false`），免疫提示词注入。
+
+<p align="center">
+  <img src="assets/gifs/05_canvas_and_pre_dom_safety_gate.gif" alt="Canvas2D 诚实画布真值与碰 DOM 前硬安全闸" width="920" />
 </p>
 
 ---
@@ -140,22 +144,19 @@
 不再是 9 万 Token 的裸 HTML 或模糊截图，而是与人眼所见严格对齐的紧凑**视口契约**：
 
 ```text
-[Page] Selenium (software)
-[Viewport] top · ~9 screens total
-[Active Surface] 3 action targets occluded by foreground layer were removed; use visible targets only
-[Frozen Cross-Page Evidence] E0 "Playwright_Developer: Microsoft" @f2 | E3 "Playwright_License: Apache License 2.0" @f2
+[页面主题] Embedded iframe Dispatch Workspace (ehbrowser.com)
+[跨域 OOPIF] 顶页与 pages.dev 子 <iframe> 统一编入同一张视口契约
+[已审计证据] E0 "VSKU-002 · Solstice 65% Wireless · $51.00"（跨虚拟滚动 DOM 回收保留）
 
-▸Card[@N328 @M10:O25] ⚠ clipped-bottom
-  ▸Card[@N192 @M13:O13]
-    N191  @M13   text: Release
-    N193  @O13   Release*: 2004; 22 years ago (2004)
-  ▸Card[@N198 @M14:O14]
-    N207  @M14   title*: Stable release
-    N208  @O14   title*: 4.53.0 / 17 November 2026
-  ▸Card[@N290 @M22:O22]
-    N288  @O22   Operating system: Cross-platform
-  ▸Card[@N303 @M25:O25] ⚠ clipped-bottom
-    N304  @O25   License*: Apache License 2.0
+▸卡[@N35组 @B8:E15]  Parent Document · Order Summary
+  N42   @E9    Order ID*: ORD-2026-8841   {field_source=table_row_th}
+  N47   @E11   Item*: Meridian K75 Tactile (× 4 units)
+  N53   @E14   Declared Value: $258.00 USD
+▸卡[@N1~2组 @I10:J20]  Cross-Origin OOPIF <iframe>
+  N9~2  @I15   Dispatch Manifest Reference: 值「MAN8841」 可编辑
+  N12   @I18   Standard Ground 可点 [已选中]
+  N15   @I19   Issue Dispatch Label 可点
+  N16~2 @I20   Status: Label Issued · MAN8841 · Standard Ground ✓
 ```
 
 - **杜绝乱点**：被遮挡控件在模型思考前已被彻底清出操作面；

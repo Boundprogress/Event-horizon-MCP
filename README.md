@@ -4,9 +4,9 @@
 
 ### The Human-Visible Reality Layer for AI Browser Agents
 
-**Compiled Viewport Perception over MCP — 91.9% fewer tokens, 0 occluded clicks, zero site rules.**
+**Compiled Viewport Perception over MCP — 95%+ smaller context across 8 hostile frontend stacks, 0 occluded clicks, zero site rules.**
 
-[English](README.md) · [中文](README.zh-CN.md) · [Website](https://ehbrowser.com/) · [Changelog](CHANGELOG.md) · [Quickstart (100% Free)](#60-second-quickstart-100-free--register--use) · [Benchmarks](#proof-compiled-perception-vs-dom--vision) · [Why Hosted & Free](#why-is-the-perception-core-hosted)
+[English](README.md) · [中文](README.zh-CN.md) · [8-Stack Interactive Arena (Zero Login)](https://ehbrowser.com/playground/) · [Website](https://ehbrowser.com/) · [Changelog](CHANGELOG.md) · [Quickstart (100% Free)](#60-second-quickstart-100-free--register--use) · [Why Hosted & Free](#why-is-the-perception-core-hosted)
 
 </div>
 
@@ -43,76 +43,80 @@ Strip away colors, textures, and framework noise from any webpage, and only two 
 
 | Dimension | Track 1: Raw DOM / AX Tree<br>*(Playwright MCP, etc.)* | Track 2: Vision / Pixel Loops<br>*(Computer Use, Vision BU)* | **Track 3: Compiled Viewport Perception**<br>***Event Horizon*** |
 | :--- | :--- | :--- | :--- |
-| **What the model sees** | Full hidden/offscreen document tree (`200k+ tok`) | Heavy PNG screenshots (`(x, y)` guessing) | **Compact Visible Viewport Contract (`16.3k tok`)** |
-| **Occluded modal controls** | Exposed as clickable (`85 / 90` leaked) | Guesses through visual clutter | **Stripped before reasoning (`0 / 90` leaked)** |
-| **Shadow DOM & `div`-soup** | Fragile selectors / massive tree bloat | Blind to structure & tiny cells | **546 open Shadow Roots pierced · 0 site rules** |
-| **Live resize & page zoom** | Stale refs / broken coordinates | Coordinate drift & misclicks | **Viewport-recompiled mid-task · 0 missed clicks** |
-| **Hidden inline editors** | Misses cells with no `<input>` in DOM | Unreliable double-click guessing | **Probe-editable detection & verified mutation** |
-| **High-risk actions** | Prompt-only (*"please don't log in"*) | Prompt-only | **Code-enforced Pre-DOM Safety Gate** |
+| **What the model sees** | Full hidden/offscreen document tree (`112k–235k ch/screen`) | Heavy PNG screenshots (`(x, y)` guessing) | **Compact Visible Viewport Contract (`1.0k–5.2k ch`, `-95.3% to -99.1%`)** |
+| **Occluded modal controls** | Exposed as clickable behind backdrop | Guesses through visual clutter | **Stripped before reasoning (`0` occluded leaks)** |
+| **Shadow DOM, OOPIF iframe & Portals** | SOP blocked / fragile selectors / tree bloat | Blind to structure & tiny controls | **55 ShadowRoots + Cross-Origin OOPIF + Body Portals unified · 0 site rules** |
+| **Virtualized lists (DOM recycling)** | Unmounted rows missing; scrolling destroys rows | Re-reads screenshots every scroll | **Inner virtual scroller + frozen `E*` evidence survives DOM recycle** |
+| **Canvas2D & transparent button covers** | Misses `opacity:0` shells or leaks backdrops | Uploads heavy PNGs every turn | **Honest canvas geometry (0 PNGs) + exact `opacity:0` native binding** |
+| **High-risk actions** | Prompt-only (*"please don't log in"*) | Prompt-only | **Code-enforced Pre-DOM Safety Gate (`dom_touched: false`)** |
 | **Browser, IP & Privacy** | Cloud browser or heavy local deps | Screenshots sent to cloud VLMs | **Your local Chrome · No screenshots · Zero content retention** |
 
 ---
 
-## Proof: Compiled Perception vs. DOM & Vision
+## Proof: 8-Stack Frontend Arena (100% Self-Hosted & Reproducible)
 
-### 1. 91.9% Fewer Tokens & Zero Occluded Leaks (3-Way Live 2K Benchmark)
+Instead of cherry-picking third-party websites, every recording and measurement below runs against our **100% self-hosted, zero-trademark [8-Stack Frontend Arena](https://ehbrowser.com/playground/)** ([live source lab](https://ehbrowser.com/playground/lab/)). Open it in your browser, press **F12**, and inspect every DOM trap, ShadowRoot, cross-origin `<iframe>`, virtualized row, and compiled Viewport Contract yourself.
 
-Head-to-head on the exact same 2K viewport (`2560×1440`) using `deepseek-flash` (`temp=0`) across 5 notoriously hard public pages:
+### 1. Eight Hostile Frontend Stacks → One Unified Viewport Contract
 
 <p align="center">
-  <img src="assets/gifs/01_token_occlusion_showdown.gif" alt="Event Horizon vs Playwright MCP vs Browser Use 2K Benchmark" width="920" />
+  <img src="assets/gifs/01_arena_unified_8stacks.gif" alt="Event Horizon 8 Hostile Frontend Stacks Compiled Into One Unified Viewport Contract" width="920" />
 </p>
 
-| Hard Public Page | Playwright MCP | Browser Use 1.0.6 | **Event Horizon** |
-| :--- | :---: | :---: | :---: |
-| **1. Apple SEC 10-K Financial Table** | `93,169 tok` · PASS | `45,365*` · **FAIL (Cut Off)** | **`3,538 tok` (26× smaller) · PASS** |
-| **2. Wikipedia Multi-Header Table** | `38,874 tok` · PASS | `11,788 tok` · PASS | **`3,828 tok` · PASS** |
-| **3. Bootstrap 5.3 Live Modal (90 covered)** | `16,880 tok` · **85 leaks** | `8,999 tok` · **82 leaks** | **`375 tok` · 0 leaks** |
-| **4. UN 240-Row Long Table** | `49,588 tok` · NO FOLD | `14,793 tok` · NO FOLD | **`4,989 tok` · PASS** |
-| **5. arXiv Advanced Form** | `2,314 tok` · PASS | `1,383 tok` · PASS | **`3,606 tok` · PASS** |
-| **5-Page Total Context / Delivery** | **`200,825 tok` · 3/5** | **`82,328 tok` · 2/5** | **`16,336 tok` (-91.9%) · 4/5*** |
+| Self-Hosted Arena Stack (`1440×900` · Inspect via F12) | Raw DOM HTML | Full AXTree | **Event Horizon Contract & Verified Action** |
+| :--- | :---: | :---: | :--- |
+| **1. Obfuscated Div-Soup Catalog** *(180 hidden noise nodes)* | `112,040 ch` | `235,649 ch` | **`4,802 → 3,168 ch`** (`-95.7% / -98.0%`) · Delta scroll + `E0` ✓ |
+| **2. Modal Physical Occlusion Trap** *(`z-index: 1200`)* | `112,034 ch` | `120,910 ch` | **`1,021 ch`** (`-99.1% / -99.2%`) · **0 leaks** → Unlock CSV ✓ |
+| **3. 55 Nested Open ShadowRoots** *(0 light-DOM SKUs)* | `112,031 ch` | `225,045 ch` | **`5,229 ch`** (`-95.3% / -97.7%`) · Click `N70` → `Selected ✓` |
+| **4. ARIA Combobox + DataGrid + Protected Boundary** | `112,040 ch` | `124,585 ch` | **`3,939 ch`** (`-96.5% / -96.8%`) · Sign-in & Password **BLOCKED** ✓ |
+| **5. Cross-Origin OOPIF `<iframe>`** *(`ehbrowser.com → pages.dev`)* | `112,038 ch` | `98,006 ch` | **`3,603 ch`** (`-96.8% / -96.3%`) · Fill `N9~2` + Submit `N15` ✓ |
+| **6. Virtualized 500-Row Ledger** *(only 12 DOM rows mounted)* | `112,040 ch` | `184,232 ch` | **`4,237 → 3,820 ch`** (`-96.2% / -97.7%`) · `E0` survives DOM recycle ✓ |
+| **7. Body-Mounted Calendar Portal + `opacity:0` Native Shell** | `112,045 ch` | `119,112 ch` | **`2,902 ch`** (`-97.4% / -97.6%`) · Pick Dec 18 + Confirm ✓ |
+| **8. HTML5 Canvas2D Chart + Multi-Select Region Deck** | `112,041 ch` | `98,054 ch` | **`3,219 ch`** (`-97.1% / -96.7%`) · Honest canvas + W47 redraw ✓ |
 
-> *Benchmark note: Measured on the 5 listed public pages under a fixed 2K viewport with `deepseek-flash`. Figures reflect this controlled suite and do not guarantee identical compression or completion rates on every website.*
+> *100% live-captured directly from the Event Horizon engine at `1440×900` with zero site rules, zero screenshots uploaded, and zero `<html>` loose leaks. Try all 8 contracts interactively with zero login at [ehbrowser.com/playground/](https://ehbrowser.com/playground/).*
 
 ---
 
-### 2. Six Pages Deep for Under 1¢ (`$0.0093` Total · Zero Drift)
+### 2. Modal Occlusion Isolation (`0` Leaks) + 55 Open ShadowRoots Pierced & Clicked
 
-Autonomous 6-layer research dive driven live by `deepseek-flash` (`Wikipedia Main Page → Python → Guido van Rossum → University of Amsterdam → Amsterdam → Netherlands`). Context stays flat at **~3,800 tokens/step** across **9 live calls** (`34,581 tok` total), extracting **5/5 cross-layer facts** with zero hallucination.
-
-<p align="center">
-  <img src="assets/gifs/02_6layer_deep_dive_1cent.gif" alt="DeepSeek Flash 6-Layer Autonomous Deep Dive for $0.0093" width="920" />
-</p>
-
----
-
-### 3. 546 Open Shadow DOM Roots Pierced — Zero Site Rules
-
-On `shoelace.style` (pure Web Components), Event Horizon pierces **546 open `#shadow-root` boundaries** with zero CSS selectors — opening the Shadow Search modal inside overlay `O0`, typing `Dialog`, navigating to `<sl-dialog>`, and switching its Shadow DOM `React` tab live.
+- **Act 1 (Modal Trap)**: While the `z-index: 1200` currency modal is active, Event Horizon emits only the `1,021`-char foreground dialog (`-99.1%`), completely removing occluded controls (`Export Ledger CSV`) until clicking `Keep USD Settings` unlocks `N46`.
+- **Act 2 (55 ShadowRoots)**: With `0` light-DOM SKU nodes inside 55 nested open `#shadow-root` trees, EH pierces every boundary with zero CSS selectors and clicks `Inspect SKU` (`N70`) → verified **`Selected ✓`**.
 
 <p align="center">
-  <img src="assets/gifs/03_shadow_dom_546_pierced.gif" alt="546 Open Shadow DOM Roots Pierced Live" width="920" />
+  <img src="assets/gifs/02_modal_shadow_pierce.gif" alt="Modal Occlusion Isolation and 55 Open ShadowRoots Pierced Live" width="920" />
 </p>
 
 ---
 
-### 4. Heavy React `div`-Soup + Live Window Resize & Page Zoom Immunity
+### 3. Cross-Origin OOPIF `<iframe>` Unified Fill & Dual-Frame Submit
 
-On Material UI (`457 <div>` nodes, `1,503` hashed `css-*` classes), we shrink the real Chrome window mid-task (`1470px → 1060px → 880px @ 115% zoom → 1260px @ 85% zoom → 1470px`), triggering responsive layout reflows on every step. Event Horizon recompiles the live viewport each turn — checking `Cupcake`, `Eclair`, and `Frozen yoghurt`, sorting `Calories`, and verifying **`3 selected`** with **0 missed clicks**.
+Standard DOM dumpers hit a hard Same-Origin Policy wall (`SecurityError`) on cross-origin iframes. Event Horizon lifts both the parent document (`ehbrowser.com`) and the cross-origin out-of-process `<iframe>` (`ehbrowser-site.pages.dev`) into ONE unified contract — filling **`MAN8841`** into disambiguated ID **`N9~2`** (while leaving the top search bar untouched) and clicking **`N15`** to verify **`Label Issued · MAN8841 · Standard Ground ✓`** in both frames.
 
 <p align="center">
-  <img src="assets/gifs/04_live_resize_zoom_mui.gif" alt="Live Window Resize and Page Zoom Resilience on MUI React Table" width="920" />
+  <img src="assets/gifs/03_cross_origin_oopif_iframe.gif" alt="Cross-Origin OOPIF iframe Unified Fill and Dual-Frame Verification" width="920" />
 </p>
 
 ---
 
-### 5. Hidden Spreadsheet Inline Editing & Code-Enforced Pre-DOM Safety Gate
+### 4. Virtualized 500-Row List (`E0` Freeze) + Detached Body Portal & `opacity:0` Native Shell
 
-- **Tabulator 6.x Inline Editing**: Cells have no `<input>` element until double-clicked. Event Horizon surfaces hidden editors as `probe-editable`, updates `Oli Bob → Ada Lovelace` and `Progress 12 → 95`, and verifies persistence on the next frame.
-- **Pre-DOM Hard Safety Gate**: On Wikipedia's login page, typing into a password box and clicking `Log in` are **blocked in code before touching the DOM** — immune to prompt injection.
+- **Act 1 (DOM-Recycling Virtual List)**: Out of 500 records, only ~12 rows exist in the DOM at once. EH freezes `VSKU-002` as audited cross-scroll evidence **`E0`** before scrolling the inner virtual container (`#001–#012` → `#007–#018`) destroys row `#002` from the DOM — keeping `E0` grounded in the delta contract.
+- **Act 2 (Body Portal + `opacity:0` Cover)**: Opens a calendar popover mounted directly on `document.body` outside the form subtree, selects **Dec 18 (`2026-12-18`)**, and clicks the `opacity:0` native confirm button shell → verified **`Schedule Confirmed ✓`**.
 
 <p align="center">
-  <img src="assets/gifs/05_inline_edit_and_safety_gate.gif" alt="Tabulator Inline Cell Editing and Pre-DOM Hard Safety Gate" width="920" />
+  <img src="assets/gifs/04_virtual_list_and_portal_opacity0.gif" alt="Virtualized 500-Row Ledger E0 Freeze and Detached Body Portal Calendar" width="920" />
+</p>
+
+---
+
+### 5. Honest HTML5 Canvas2D Truth (Zero PNG Uploads) + Code-Enforced Pre-DOM Safety Gate
+
+- **Act 1 (Canvas2D)**: Instead of uploading multi-megabyte screenshots or hallucinating chart pixels, EH surfaces honest canvas unit geometry alongside live region checkboxes and clicks `Highlight Peak Week` (`N59`) — redrawing week **W47** in amber and verifying **`Highlight: On ✓`**.
+- **Act 2 (Pre-DOM Hard Safety Gate)**: Both clicking `Sign in` (`N70`) and typing into `type="password"` (`N64`) are **hard-blocked in code before touching the DOM** (`ok: false`, `dom_touched: false`) — immune to prompt injection.
+
+<p align="center">
+  <img src="assets/gifs/05_canvas_and_pre_dom_safety_gate.gif" alt="Canvas2D Honest Truth and Code-Enforced Pre-DOM Safety Gate" width="920" />
 </p>
 
 ---
@@ -140,22 +144,19 @@ Short demos are easy to stage. To test stability and real API economics at scale
 Instead of 90,000 tokens of raw HTML or a noisy screenshot, your agent receives a compact **Viewport Contract** aligned with human visual truth:
 
 ```text
-[Page] Selenium (software)
-[Viewport] top · ~9 screens total
-[Active Surface] 3 action targets occluded by foreground layer were removed; use visible targets only
-[Frozen Cross-Page Evidence] E0 "Playwright_Developer: Microsoft" @f2 | E3 "Playwright_License: Apache License 2.0" @f2
+[Page] Embedded iframe Dispatch Workspace (ehbrowser.com)
+[Cross-Origin OOPIF] Parent + pages.dev <iframe> compiled into ONE unified contract
+[Frozen Evidence] E0 "VSKU-002 · Solstice 65% Wireless · $51.00" (survives virtual DOM recycle)
 
-▸Card[@N328 @M10:O25] ⚠ clipped-bottom
-  ▸Card[@N192 @M13:O13]
-    N191  @M13   text: Release
-    N193  @O13   Release*: 2004; 22 years ago (2004)
-  ▸Card[@N198 @M14:O14]
-    N207  @M14   title*: Stable release
-    N208  @O14   title*: 4.53.0 / 17 November 2026
-  ▸Card[@N290 @M22:O22]
-    N288  @O22   Operating system: Cross-platform
-  ▸Card[@N303 @M25:O25] ⚠ clipped-bottom
-    N304  @O25   License*: Apache License 2.0
+▸Card[@N35 @B8:E15]  Parent Document · Order Summary
+  N42   @E9    Order ID*: ORD-2026-8841   {field_source=table_row_th}
+  N47   @E11   Item*: Meridian K75 Tactile (× 4 units)
+  N53   @E14   Declared Value: $258.00 USD
+▸Card[@N1~2 @I10:J20]  Cross-Origin OOPIF <iframe>
+  N9~2  @I15   Dispatch Manifest Reference: 「MAN8841」 editable
+  N12   @I18   Standard Ground clickable [selected]
+  N15   @I19   Issue Dispatch Label clickable
+  N16~2 @I20   Status: Label Issued · MAN8841 · Standard Ground ✓
 ```
 
 - **Zero Phantom Clicks**: Occluded controls are removed before the LLM ever sees them.
