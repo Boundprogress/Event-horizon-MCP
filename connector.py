@@ -270,7 +270,9 @@ def validate_local_input(value):
 
 
 
-_LOCAL_FOCUS_JS = r"""(function(){var a=document.activeElement;if(!a)return {editable:false,value:''};
+_LOCAL_FOCUS_JS = r"""(function(){var a=document.activeElement,d=0;
+ while(a&&a.shadowRoot&&a.shadowRoot.activeElement&&d++<16){var n=a.shadowRoot.activeElement;if(!n||n===a)break;a=n;}
+ if(!a)return {editable:false,value:''};
  var role=(a.getAttribute&&a.getAttribute('role')||'').toLowerCase();
  var g=(role==='gridcell'||role==='cell')&&a.closest&&a.closest('[role=grid],[role=treegrid]');
  var grid=(role==='gridcell'||role==='cell')&&a.getAttribute('aria-disabled')!=='true'&&a.getAttribute('aria-readonly')!=='true'&&
@@ -278,7 +280,8 @@ _LOCAL_FOCUS_JS = r"""(function(){var a=document.activeElement;if(!a)return {edi
  var edit=!a.disabled&&!a.readOnly&&(('value' in a&&/^(INPUT|TEXTAREA)$/.test(a.tagName))||a.isContentEditable||grid);
  return {editable:!!edit,value:'value' in a?String(a.value||''):(a.isContentEditable||grid)?String(a.innerText||a.textContent||''):''};})()"""
 _LOCAL_SELECTION_JS = (
-    "(function(){var e=document.activeElement;"
+    "(function(){var e=document.activeElement,d=0;"
+    "while(e&&e.shadowRoot&&e.shadowRoot.activeElement&&d++<16){var n=e.shadowRoot.activeElement;if(!n||n===e)break;e=n;}"
     "if(e&&e.setSelectionRange){try{e.setSelectionRange(0,String(e.value||'').length);}catch(x){}}"
     "else if(e&&(e.isContentEditable||/^(gridcell|cell)$/.test((e.getAttribute('role')||'').toLowerCase()))){"
     "try{var r=document.createRange();r.selectNodeContents(e);var s=getSelection();s.removeAllRanges();s.addRange(r);}catch(x){}}})()")
