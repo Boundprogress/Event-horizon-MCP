@@ -508,7 +508,7 @@ def validate_evidence_patch(patch):
     for item in capture:
         if (not isinstance(item, dict) or "id" not in item or set(item) - {"id", "name"}
                 or not isinstance(item["id"], str) or len(item["id"]) > 40
-                or not re.fullmatch(r"[NCUO][0-9]+(?:\.[0-9]+)*", item["id"])):
+                or not re.fullmatch(CURRENT_CONTRACT_ID, item["id"])):
             raise ClientError("invalid_evidence_capture")
         if item["id"] in seen:
             raise ClientError("duplicate_evidence_capture")
@@ -518,7 +518,7 @@ def validate_evidence_patch(patch):
             raise ClientError("invalid_evidence_name")
 
 
-CURRENT_CONTRACT_ID = r"[NCUO][0-9]+(?:\.[0-9]+)*"
+CURRENT_CONTRACT_ID = r"[NCUO][0-9]+(?:\.[0-9]+)*(?:~[0-9]+)?"
 BATCH_KINDS = frozenset({"fill", "click", "key"})
 BATCH_KEYS = frozenset({"Escape", "Enter", "Tab", "ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", "Backspace"})
 DECISION_FIELDS = frozenset({"subgoal", "evidence", "basis", "expected", "confidence", "target", "action", "evidence_patch", "ledger", "memory_patch", "plan_patch", "strategy_patch", "experience_feedback", "experience_iteration"})
@@ -853,7 +853,7 @@ def validate_action_args(arguments):
         if not isinstance(target, str) or not re.fullmatch(r"T[0-9]{1,12}", target) or query is not None:
             raise ClientError("invalid_close_tab_target")
     elif (not isinstance(target, str) or len(target) > 40
-            or not re.fullmatch(r"[NCUO][0-9]+(?:\.[0-9]+)*", target)
+            or not re.fullmatch(CURRENT_CONTRACT_ID, target)
             or not isinstance(query, str) or not query.strip() or len(query) > 256
             or any(ord(c) < 32 or ord(c) == 127 for c in query)):
         raise ClientError("invalid_select_option")

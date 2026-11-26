@@ -70,8 +70,8 @@ def _str(desc="", maximum=4096):
 
 _ID_PAT = r"^[A-Za-z0-9._-]{1,64}$"
 _SID_PAT = r"^[a-f0-9]{32}$"
-_NODE_PAT = r"^[NCUO][0-9]+(?:\.[0-9]+)*$"
-_EVID_PAT = r"^(?:[NCUO][0-9]+(?:\.[0-9]+)*|E[0-9]{1,12})$"
+_NODE_PAT = r"^[NCUO][0-9]+(?:\.[0-9]+)*(?:~[0-9]+)?$"
+_EVID_PAT = r"^(?:[NCUO][0-9]+(?:\.[0-9]+)*(?:~[0-9]+)?|E[0-9]{1,12})$"
 
 _CAPTURE_SCHEMA = {
     "type": "array",
@@ -234,10 +234,10 @@ def _first_visible_id(v2_prompt):
     if not isinstance(v2_prompt, str) or not v2_prompt:
         return None
     for line in v2_prompt.splitlines():
-        m = re.search(r"^\s*([NCUO]\d+(?:\.\d+)*)\b", line)
+        m = re.search(r"^\s*([NCUO]\d+(?:\.\d+)*(?:~\d+)?)\b", line)
         if m:
             return m.group(1)
-    m = re.search(r"\b([NCUO]\d+(?:\.\d+)*)\b", v2_prompt)
+    m = re.search(r"\b([NCUO]\d+(?:\.\d+)*(?:~\d+)?)\b", v2_prompt)
     return m.group(1) if m else None
 
 

@@ -228,13 +228,13 @@ EVIDENCE_PATCH_SCHEMA = _object({"collection": dict(_string("Initial session col
     "type": "array", "minItems": 1, "maxItems": 12,
     "items": _object({
         "id": dict(_string("Current visible contract ID to freeze before this action.", 40),
-                   pattern=r"^[NCUO][0-9]+(?:\.[0-9]+)*$"),
+                   pattern=r"^[NCUO][0-9]+(?:\.[0-9]+)*(?:~[0-9]+)?$"),
         "name": _string("Optional display alias; it does not change the page fact.", 80),
     }, ("id",)),
 }}, ("capture",))
 MEMORY_OPERATION_SCHEMA = _object({
     "op": {"type": "string", "enum": ["pin", "keep", "update", "drop"]},
-    "card": dict(_string("Current root card ID; it must also be decision evidence.", 40), pattern=r"^[NCUO][0-9]+(?:\.[0-9]+)*$"),
+    "card": dict(_string("Current root card ID; it must also be decision evidence.", 40), pattern=r"^[NCUO][0-9]+(?:\.[0-9]+)*(?:~[0-9]+)?$"),
     "purpose": {"type": "string", "enum": ["function", "information", "candidate"]},
     "summary": _string("A short memory note, not independently verified page evidence.", 180),
     "alias": dict(_string(maximum=16), pattern=r"^[A-Za-z][A-Za-z0-9_-]{0,15}$"),
@@ -266,7 +266,7 @@ BATCH_DECISION_SCHEMA = _object({key: DECISION_SCHEMA["properties"][key]
     ("subgoal", "evidence", "basis", "expected", "confidence"))
 BATCH_ACTION_SCHEMA = _object({
     "kind": {"type": "string", "enum": ["fill", "click", "key"]},
-    "target": dict(_string("Current contract ID for fill/click only.", 40), pattern=r"^[NCUO][0-9]+(?:\.[0-9]+)*$"),
+    "target": dict(_string("Current contract ID for fill/click only.", 40), pattern=r"^[NCUO][0-9]+(?:\.[0-9]+)*(?:~[0-9]+)?$"),
     "query": _string("fill text, or 1..6 comma-separated allowed keys for key; absent for click.", 8000),
     "submit": {"type": "boolean", "description": "fill only: optional Enter; an interaction boundary may stop the batch."},
 }, ("kind",))
@@ -308,7 +308,7 @@ PERCEIVE_SCHEMA = _object({
 
 ARM_ACTION_SCHEMA = _object({
     "kind":{"type":"string","enum":["fill","click","key","scroll"]},
-    "target":dict(_string("Current visible contract ID.",40),pattern=r"^[NCUO][0-9]+(?:\.[0-9]+)*$"),
+    "target":dict(_string("Current visible contract ID.",40),pattern=r"^[NCUO][0-9]+(?:\.[0-9]+)*(?:~[0-9]+)?$"),
     "query":{"type":"string","maxLength":8000},"submit":{"type":"boolean"},"decision":DECISION_SCHEMA,
 },("kind","decision"))
 ARM_PLAN_SCHEMA = _object({"id":ID_SCHEMA,"actions":{"type":"array","minItems":1,"maxItems":6,"items":ARM_ACTION_SCHEMA},
@@ -484,7 +484,7 @@ def tool_definitions():
          _object({"session_id": SESSION_SCHEMA}, ("session_id",)), False),
         ("eh_capabilities", "Read authoritative opt-in advanced capability configuration. Tool presence alone does not mean enabled; inspect each group and its current-frame requirements. No browser action.", _object({}), True),
         ("eh_act_arm", "Run one bounded opt-in public-core plan against the current frame. operate requires 2..6 fill/click/key actions; collect is one non-top scroll; navigate is scroll-only. Each child needs its decision. The service derives the core frame; no caller base_frame. Inspect completed/planned, handoff and final observation; never replay remaining actions. A service-verified execution_outcome=arm_handoff is a completed handoff, not plan success; read its new observation before deciding one new action.", _object(dict(common,frame_id=FRAME_SCHEMA,plan=ARM_PLAN_SCHEMA),("session_id","request_id","frame_id","plan")), False),
-        ("eh_collect_sweep", "Opt-in collection sweep requires a fresh grid frame, high operational confidence and a whole_card collection policy registered on first perception. Each intermediate contract is returned in frame_deliveries and costs its actual successful frame. Stops at bounds or uncertainty; never claim skipped ranges were read.", _object(dict(common,frame_id=FRAME_SCHEMA,collection=dict(_string(maximum=32),pattern=r"^[a-z][a-z0-9_-]{0,31}$"),seed=dict(_string(maximum=40),pattern=r"^[NCUO][0-9]+(?:\.[0-9]+)*$"),decision=DECISION_SCHEMA,max_segments={"type":"integer","minimum":1,"maximum":24},max_seconds={"type":"number","minimum":0.1,"maximum":60}),("session_id","request_id","frame_id","collection","seed","decision")), False),
+        ("eh_collect_sweep", "Opt-in collection sweep requires a fresh grid frame, high operational confidence and a whole_card collection policy registered on first perception. Each intermediate contract is returned in frame_deliveries and costs its actual successful frame. Stops at bounds or uncertainty; never claim skipped ranges were read.", _object(dict(common,frame_id=FRAME_SCHEMA,collection=dict(_string(maximum=32),pattern=r"^[a-z][a-z0-9_-]{0,31}$"),seed=dict(_string(maximum=40),pattern=r"^[NCUO][0-9]+(?:\.[0-9]+)*(?:~[0-9]+)?$"),decision=DECISION_SCHEMA,max_segments={"type":"integer","minimum":1,"maximum":24},max_seconds={"type":"number","minimum":0.1,"maximum":60}),("session_id","request_id","frame_id","collection","seed","decision")), False),
         ("eh_experience", "Prepared experience route; call only when authoritative capabilities.experience.available=true. A visible tool with an unavailable route is not usable support. mode route uses objective; retrieve uses task_pattern. These are strategies, not current page facts or permission to bypass a guard. Select only returned refs on first perception or strategy patch. No browser action or command/frame charge.", _ADVANCED_CONTRACT.ADVANCED_SCHEMAS["experience_query"], True),
     ]
     return [{"name": name, "description": description, "inputSchema": schema,

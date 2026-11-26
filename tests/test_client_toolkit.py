@@ -201,6 +201,22 @@ class ClientToolkitTests(unittest.TestCase):
         self.assertTrue(fin["session_closed"])
         self.assertIsNone(bridge.active_session_id)
 
+    def test_cross_frame_tilde_ids_accepted(self):
+        import re
+        pub_client = eh_toolkit._load_sibling("client")
+        pub_agent = eh_toolkit._load_sibling("example_agent")
+
+        for tid in ("N9~2", "N15~3", "C0.1~2"):
+            self.assertIsNotNone(re.fullmatch(eh_toolkit._NODE_PAT, tid))
+            self.assertIsNotNone(re.fullmatch(eh_toolkit._EVID_PAT, tid))
+            self.assertIsNotNone(re.fullmatch(pub_client.CURRENT_CONTRACT_ID, tid))
+            pub_agent._validate({"capture": [{"id": tid}]}, pub_agent.EVIDENCE_PATCH_SCHEMA)
+            pub_client.validate_evidence_patch({"capture": [{"id": tid}]})
+        self.assertEqual(eh_toolkit._first_visible_id("  N9~2  @I15  Manifest"), "N9~2")
+        for bad in ("N9~", "N9~a", "N9~2~3"):
+            self.assertIsNone(re.fullmatch(eh_toolkit._NODE_PAT, bad))
+            self.assertIsNone(re.fullmatch(pub_client.CURRENT_CONTRACT_ID, bad))
+
 
 if __name__ == "__main__":
     unittest.main()
