@@ -1525,7 +1525,7 @@ class MCPServer:
             result = {"protocolVersion": version if version in PROTOCOLS else PROTOCOLS[0],
                       "capabilities": {"tools": {"listChanged": False}},
                       "serverInfo": {"name": "event-horizon", "version": _client_version()},
-                      "instructions": SERVER_INSTRUCTIONS}
+                      "instructions": getattr(self.bridge, "instructions", SERVER_INSTRUCTIONS)}
         elif not self.ready:
             return self.error(identity, -32002, "Initialize first")
         elif method == "tools/list":
@@ -1563,11 +1563,14 @@ class MCPServer:
 
 
 def serve_mcp(*, config_path=None, console_directory=None, directory=None, stdin=None, stdout=None,
-              expected_account=None, expected_endpoint=None):
+              expected_account=None, expected_endpoint=None, profile="full"):
     reader = stdin or sys.stdin.buffer
     writer = stdout or sys.stdout.buffer
-    server = MCPServer(AgentBridge(config_path=config_path, console_directory=console_directory,
-                                    directory=directory, expected_account=expected_account, expected_endpoint=expected_endpoint))
+    bridge = AgentBridge(config_path=config_path, console_directory=console_directory,
+                         directory=directory, expected_account=expected_account, expected_endpoint=expected_endpoint)
+    if profile == "simple":
+        bridge = sibling("eh_toolkit").SimpleBridge(bridge)
+    server = MCPServer(bridge)
     while True:
         raw = reader.readline(MAX_RPC_INPUT + 1)
         if not raw:
@@ -1627,7 +1630,7 @@ def mcp_config(console_directory, *, updater=None, install_root=None, python=Non
 
 
 def invoke_tool(*, name=None, list_tools=False, arguments=None, config_path=None, console_directory=None,
-                directory=None, expected_account=None, expected_endpoint=None):
+                directory=None, expected_account=None, expected_endpoint=None, profile="full"):
     """Run one EH MCP tool (or list tool schemas) directly via the same bound AgentBridge.
 
     Used by eh_sdk.py and by non-MCP desktop hosts (e.g. shell-only agents) as a
@@ -1640,6 +1643,8 @@ def invoke_tool(*, name=None, list_tools=False, arguments=None, config_path=None
         expected_account=expected_account,
         expected_endpoint=expected_endpoint,
     )
+    if profile == "simple":
+        bridge = sibling("eh_toolkit").SimpleBridge(bridge)
     if list_tools:
         return 0, {"tools": list(bridge.tools.values())}
     if not isinstance(name, str) or name not in bridge.tools:

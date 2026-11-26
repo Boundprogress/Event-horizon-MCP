@@ -4,6 +4,22 @@ All notable updates to the open **Event Horizon thin client** (`Event-horizon-MC
 
 ---
 
+## 2026-11-26 — Lean 5-Tool MCP Profile (`--profile simple`) & `eh_toolkit.py`
+
+### Thin Client (`Event-horizon-MCP`)
+- **Opt-in 5-tool Lean Atomic MCP profile (`client.py mcp --profile simple`, `client.py tool --profile simple`, `eh_toolkit.py`)**:
+  - Added a zero-dependency high-level facade (`eh_toolkit.py`) exposing 5 lean atomic tools (`eh_status`, `eh_open`, `eh_act`, `eh_finish`, `eh_recover`) while keeping the default `--profile full` (17 tools) **100% backward compatible**.
+  - Shrinks MCP tool schema size by **74%** (`6.2 KB`), cutting Turn-1 agent prompt size by **66%** (`28.8k → 9.8k` tokens).
+  - Automatically tracks active `session_id`, latest `frame_id`, globally unique journaled `request_id`, lockstep per-frame `capture` evidence freezing, and automatic `evidence[:12]` projection when `eh_finish` submits >12 grounded bindings — with **zero** client-side core code, **zero** local CDP bypass, and all safety/idempotency gates preserved.
+- **Agent Skill refinement (`skills/eh-subscription-browser/SKILL.md`)**:
+  - Clarified globally unique `request_id` naming, `evidence_patch` usage on free-tier accounts, and `kind="expand"` invocation rules.
+- **Live trans-Pacific Amazon 10-item benchmark** (`DeepSeek V4.1 Flash`, ~512 ms base RTT, `--profile simple`):
+  - **12 steps, 11/11 tool calls succeeded (`0` errors, `0` pending polls), 18 grounded bindings committed and auto-closed**.
+  - **End-to-end wall clock: `144.3s` (`2m 24s`)** (EH tools `87.4s`, LLM `56.9s`, `327.7k` total tokens, `86.7%` cache hit) — **11.5× faster** than pre-optimization baseline (`1,664.9s / 74 steps / 4.31M tokens`).
+- **Verification**: Added `tests/test_client_toolkit.py`; full public suite **72/72 passing** and `client.py audit` passes with `stdlib_only: true` and `0` findings.
+
+---
+
 ## 2026-11-25 — 3×–7× Faster Cross-Ocean Perception & Scrolling + Persistent HTTPS Keep-Alive
 
 ### Thin Client (`Event-horizon-MCP`)

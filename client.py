@@ -1085,6 +1085,8 @@ def parser():
     mcp.add_argument("--directory", help="private submission journal directory for --config mode")
     mcp.add_argument("--expected-account", help="account binding from an EH-generated connection package")
     mcp.add_argument("--expected-endpoint", help="endpoint paired with --expected-account")
+    mcp.add_argument("--profile", choices=("full", "simple"), default="full",
+                     help="MCP toolset profile: full (17 atomic tools) or simple (5 lean atomic tools)")
     export = sub.add_parser("mcp-config", parents=[common], help="Print credential-free MCP or ACP configuration")
     export.add_argument("--console-directory", required=True)
     export.add_argument("--host", choices=("generic", "codex", "acp"), default="generic")
@@ -1097,6 +1099,8 @@ def parser():
     tool.add_argument("--directory", help="private submission journal directory for --config mode")
     tool.add_argument("--expected-account", help="account binding from an EH-generated connection package")
     tool.add_argument("--expected-endpoint", help="endpoint paired with --expected-account")
+    tool.add_argument("--profile", choices=("full", "simple"), default="full",
+                      help="Tool profile: full (17 atomic tools) or simple (5 lean atomic tools)")
     tool_sel = tool.add_mutually_exclusive_group(required=True)
     tool_sel.add_argument("--name", help="EH tool name, e.g. eh_status, eh_sessions, eh_perceive, eh_act")
     tool_sel.add_argument("--list", action="store_true", help="list all available EH tools and JSON schemas")
@@ -1149,6 +1153,7 @@ def main(argv=None):
                     directory=args.directory,
                     expected_account=args.expected_account,
                     expected_endpoint=args.expected_endpoint,
+                    profile=args.profile,
                 )
                 print(json.dumps(payload, ensure_ascii=False))
                 return code
@@ -1156,7 +1161,8 @@ def main(argv=None):
                 raise bridge.AgentError("mcp_stdout_is_protocol_only")
             return bridge.serve_mcp(config_path=getattr(args, "config", None),
                                     console_directory=args.console_directory, directory=args.directory,
-                                    expected_account=args.expected_account, expected_endpoint=args.expected_endpoint)
+                                    expected_account=args.expected_account, expected_endpoint=args.expected_endpoint,
+                                    profile=args.profile)
         except (BrokenPipeError, KeyboardInterrupt):
             return 0
         except Exception:

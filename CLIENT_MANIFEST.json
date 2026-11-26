@@ -6,8 +6,8 @@
       "sha256": "7204bdf4e34a861b93e8dd14e2c12015933d9043498fc3151f4f4e9ba96e4d1b"
     },
     "CHANGELOG.md": {
-      "bytes": 6179,
-      "sha256": "02dbee47d4dd5239e1cee1d3d4ec9a1018052b1b542fe207ba29b733f8aa7c8b"
+      "bytes": 7988,
+      "sha256": "980222d7800be8d66b3414cf2b4b05f6646dabb5e033c660eea3e55ec5d97bb1"
     },
     "LICENSE": {
       "bytes": 34523,
@@ -58,8 +58,8 @@
       "sha256": "0c20d01eaba3c8b8ce6e11080637c3890731476387fdbaa2ba848c016e0bbe7d"
     },
     "client.py": {
-      "bytes": 67794,
-      "sha256": "6141187524ff516306a98dbe242618fd15bf6e2febe9262c0305ab156fa3a835"
+      "bytes": 68255,
+      "sha256": "3c4b78238bf91e4a3aa15b300887d4664b4471d616fd782511cfd3fea29c0e2c"
     },
     "connector.py": {
       "bytes": 63954,
@@ -113,9 +113,13 @@
       "bytes": 12254,
       "sha256": "a101d8dfabff401f3945e5b59364ea6e40c35cd7b9f560b5b6b5dded27352b1d"
     },
+    "eh_toolkit.py": {
+      "bytes": 23743,
+      "sha256": "a91cbdb67b288091701af9992c913ace4f170072224ec6afec5b27136d654593"
+    },
     "example_agent.py": {
-      "bytes": 123271,
-      "sha256": "f271a2c2bb0c4343afa97d28e1d5ec987a61c1b568015c68c4ab18a4ec194c8c"
+      "bytes": 123526,
+      "sha256": "85bf2e77a0514d03d7dbfbc8ced3c7cccbccd9ac18b184dbdf908f8a5bbeafc2"
     },
     "glama.json": {
       "bytes": 104,
@@ -154,8 +158,8 @@
       "sha256": "537bd0d3c0b2ec4f0516a2512fee42644f1183568d69b82d605e58f8964fa123"
     },
     "skills/eh-subscription-browser/SKILL.md": {
-      "bytes": 8310,
-      "sha256": "53056b5d82ab5c8785e3896bb00b899b32d9cc163e7183c5ee7e2c90d07faaca"
+      "bytes": 8788,
+      "sha256": "0e033dfc1d5c114af3993af93c5e2a6ea26e5827dd63e58ee74c5312b7794e12"
     },
     "terms.html": {
       "bytes": 41286,
@@ -184,6 +188,10 @@
     "tests/test_client_lifecycle_batch.py": {
       "bytes": 9602,
       "sha256": "7e96d80cbc74e3d05cc6be42af3af1d74ec56ee0dcf873c4cbadec08ab185844"
+    },
+    "tests/test_client_toolkit.py": {
+      "bytes": 9324,
+      "sha256": "2af23b6b6621efbb5db4e974953090d28b7161c8b8697317f2c2b1926be5f650"
     },
     "tests/test_console_exit.py": {
       "bytes": 11119,

@@ -36,7 +36,7 @@ Event Horizon compiles the **human-visible viewport** into compact IDs instead o
 
 ## 3. Core 5-Step Driving Loop (核心驾驶闭环)
 
-1. **Create session (+ optional auto-perceive)**: Call `eh_create_session(request_id, objective, start_url, auto_perceive=true)` with a fresh `request_id` to open the session and receive the first `frame_id` and `core_result.v2_prompt` in one call. Save `session_id`. (If receipt is lost, recover with `eh_session(create_request_id=...)` — never create a duplicate.)
+1. **Create session (+ optional auto-perceive)**: Call `eh_create_session(request_id, objective, start_url, auto_perceive=true)` with a **globally unique** `request_id` (include a short timestamp or random suffix like `create-1125-7f3a` so it never collides with an earlier run in the local journal) to open the session and receive the first `frame_id` and `core_result.v2_prompt` in one call. Save `session_id`. (If receipt is lost, recover with `eh_session(create_request_id=...)` — never create a duplicate.)
 2. **Perceive (only if not auto-perceived or refreshing)**: Call `eh_perceive(session_id, request_id)` (omit `arguments.max_steps` unless needed; never set `max_steps=1` just to peek). Read `core_result.v2_prompt` and the outer `frame_id`.
 3. **Act**: Call `eh_act` using the current outer `frame_id`, a new `request_id`, and a concise `decision` (1–12 visible or `E*` evidence IDs):
    ```json
@@ -59,7 +59,7 @@ Event Horizon compiles the **human-visible viewport** into compact IDs instead o
    - If `eh_act` returns a fresh `core_result.observation.v2_prompt` and new `frame_id` without errors, continue directly from it — no redundant `eh_perceive`.
    - If `transport.wait_expired == true` or status is `pending`/`queued`/`running`, poll the **same** `request_id` with `eh_request(session_id, request_id)` — **never resend with a new `request_id`**.
 4. **Freeze & clean up before finishing**:
-   - Before scrolling away, navigating, or closing a tab whose facts you need later, freeze visible IDs via `decision.evidence_patch: {"capture": [{"id": "C1", "name": "short_alias"}]}` and record the returned `E*` IDs from `audited_evidence`.
+   - Before scrolling away, navigating, or closing a tab whose facts you need later, freeze visible IDs via `decision.evidence_patch: {"capture": [{"id": "C1", "name": "short_alias"}]}` and record the returned `E*` IDs from `audited_evidence`. **Omit `"collection"` inside `evidence_patch` unless `eh_status.capabilities.groups.collection.available == true`** (sending `"collection"` when disabled returns `403 advanced_capability_disabled`).
    - Close extra tabs you opened (`eh_tabs` → `close_tab`) while keeping the last working tab and user-owned tabs.
 5. **Commit & close**:
    - Call `eh_terminal(session_id, request_id, frame_id, status, conclusion, bindings, close_session=true)`. For `status="success"`, `bindings` must be non-empty and point to current-frame answer nodes or frozen `E*` IDs.
@@ -75,7 +75,7 @@ Event Horizon compiles the **human-visible viewport** into compact IDs instead o
 | Keyboard on focus | `kind="key"`, `query="Escape" \| "Enter" \| "Tab" \| "ArrowDown" ...` | Field/focus/overlay change (max 6 comma-separated keys) |
 | Scroll | `kind="scroll"`, `query="down" \| "up"` | New visible items; never claim skipped regions were read |
 | Tabs & history | `back`; `switch_tab` (`target="T1"`); `open_tab` (`query="<URL>"`); `close_tab` (`target="T1"`) | Tab ownership & returned observation |
-| Full text contract | `kind="expand"` (no `target`/`query`) | Full `observation.v2_prompt` (does not expand webpage UI) |
+| Full text contract | `kind="expand"` (omit `target`/`query` for full viewport; only pass a root card ID `▸卡[@N…组]`/`C…`, never a leaf node) | Full `observation.v2_prompt` (does not expand webpage UI; use `scroll` to read items below the fold) |
 
 ## 5. Non-Negotiable Rules (6 条红线)
 
